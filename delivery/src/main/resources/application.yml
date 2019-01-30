@@ -1,0 +1,5 @@
+server:
+  port: 50054
+
+applicationTagsYamlFile: "./delivery/applicationTags.yaml"
+wfReportingConfigYamlFile: "./wfReportingConfig.yaml"

@@ -1,0 +1,4 @@
+reportingMechanism: direct
+server: replace-with-wavefront-server-url
+token: replace-with-wavefront-token
+reportTraces: true
