@@ -30,7 +30,11 @@ func NewGlobalTracer(serviceName string) io.Closer {
 		log.Fatalf("error creating wavefront sender: %q", err)
 	}
 
-	appTags := application.New("inventory", serviceName)
+	appName := GlobalConfig.Application
+	if appName == "" {
+		appName = "beachshirts"
+	}
+	appTags := application.New(appName, serviceName)
 
 	directReporter := reporter.New(sender, appTags)
 	consoleReporter := reporter.NewConsoleSpanReporter(serviceName)

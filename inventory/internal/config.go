@@ -1,6 +1,7 @@
 package internal
 
 type InventoryConfig struct {
+	Application      string
 	Service          string
 	CheckoutHost     string
 	AvailabilityHost string
@@ -23,6 +24,7 @@ var GlobalConfig InventoryConfig
 
 func InitGlobalConfig() {
 	GlobalConfig = InventoryConfig{
+		Application:      "",
 		Service:          "",
 		CheckoutHost:     "localhost:50050",
 		AvailabilityHost: "localhost:50052",
