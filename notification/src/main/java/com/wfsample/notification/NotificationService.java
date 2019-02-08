@@ -41,9 +41,6 @@ public class NotificationService implements NotificationApi {
   }
 
   public Response notify(String trackNum) {
-    Span currentSpan = tracer.scopeManager().active().span();
-    TextMap carrier = new TextMapInjectAdapter(new HashMap<>());
-    tracer.inject(currentSpan.context(), Format.Builtin.HTTP_HEADERS, carrier);
     ExecutorService executorService = new TracedExecutorService(
         Executors.newFixedThreadPool(1), tracer);
     executorService.submit(new InternalNotifyService());
@@ -54,9 +51,7 @@ public class NotificationService implements NotificationApi {
 
     @Override
     public void run() {
-      TextMap carrier = new TextMapExtractAdapter(new HashMap<>());
-      SpanContext ctx = tracer.extract(Format.Builtin.HTTP_HEADERS, carrier);
-      try (Scope asyncSpan = tracer.buildSpan("asyncNotify").asChildOf(ctx).
+      try (Scope asyncSpan = tracer.buildSpan("asyncNotify").
           startActive(true)) {
         try {
           Thread.sleep(200);
