@@ -1,2 +1,3 @@
-﻿applicationTagsYamlFile: "applicationTags.yaml"
+﻿port: 50063
+applicationTagsYamlFile: "applicationTags.yaml"
 wfReportingConfigYamlFile: "../../../wfReportingConfig.yaml"

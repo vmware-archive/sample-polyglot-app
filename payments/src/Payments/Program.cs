@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.IO;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -16,16 +12,24 @@ namespace Payments
             CreateWebHostBuilder(args).Build().Run();
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration((context, builder) =>
-                {
-                    var env = context.HostingEnvironment;
-                    builder
-                        .AddYamlFile("app.yaml", optional: false)
-                        .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                        .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
-                })
-                .UseStartup<Startup>();
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args)
+        {
+            var appConfig = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddYamlFile("app.yaml")
+                .Build();
+            return WebHost.CreateDefaultBuilder(args)
+               .ConfigureAppConfiguration((context, builder) =>
+               {
+                   var env = context.HostingEnvironment;
+                   builder
+                       .AddYamlFile("app.yaml", optional: false)
+                       .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                       .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
+               })
+               .UseUrls($"http://localhost:{appConfig["port"]}")
+               .UseStartup<Startup>();
+        }
+       
     }
 }
