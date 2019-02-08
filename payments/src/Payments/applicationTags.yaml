@@ -1,0 +1,7 @@
+﻿application: beachshirts
+cluster: us-west
+service: payments
+shard: primary
+customTags:
+  location: Palo-Alto
+  env: production
