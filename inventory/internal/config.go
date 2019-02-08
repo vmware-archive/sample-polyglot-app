@@ -6,6 +6,9 @@ type InventoryConfig struct {
 	AvailabilityHost string
 	WarehouseHost    string
 
+	Server           string
+	Token            string
+
 	// simulation
 	SimFailCheckout  float32
 	SimFailStyling   float32
@@ -24,6 +27,9 @@ func InitGlobalConfig() {
 		CheckoutHost:     "localhost:50050",
 		AvailabilityHost: "localhost:50052",
 		WarehouseHost:    "localhost:50054",
+
+		Server:           "",
+		Token:            "",
 
 		SimFailCheckout:  0.1,
 		SimFailStyling:   0.2,

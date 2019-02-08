@@ -17,9 +17,13 @@ import (
 )
 
 func NewGlobalTracer(serviceName string) io.Closer {
+	if GlobalConfig.Server == "" || GlobalConfig.Token == "" {
+		log.Fatal("missing server and token")
+	}
+	
 	config := &senders.DirectConfiguration{
-		Server: "https://tracing.wavefront.com",
-		Token: "354b6d73-5536-419e-be6e-779a016eeab9",
+		Server: GlobalConfig.Server,
+		Token: GlobalConfig.Token,
 	}
 	sender, err := senders.NewDirectSender(config)
 	if err != nil {
