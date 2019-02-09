@@ -8,7 +8,10 @@ import com.wfsample.common.dto.DeliveryStatusDTO;
 import com.wfsample.common.dto.OrderDTO;
 import com.wfsample.common.dto.OrderStatusDTO;
 import com.wfsample.common.dto.PackedShirtsDTO;
+import com.wfsample.common.dto.PaymentDTO;
 import com.wfsample.service.DeliveryApi;
+import com.wfsample.service.InventoryApi;
+import com.wfsample.service.PaymentsApi;
 import com.wfsample.service.StylingApi;
 
 import java.util.UUID;
@@ -46,11 +49,14 @@ public class ShoppingService extends Application<DropwizardServiceConfig> {
   }
 
   @Override
-  public void run(DropwizardServiceConfig configuration, Environment environment)
-      throws Exception {
+  public void run(DropwizardServiceConfig configuration, Environment environment) {
     this.configuration = configuration;
-    String stylingUrl = "http://" + configuration.getStylingHost() + ":" + configuration
-        .getStylingPort();
+    String inventoryUrl = "http://" + configuration.getInventoryHost() + ":" +
+        configuration.getInventoryPort();
+    String paymentsUrl = "http://" + configuration.getPaymentsHost() + ":" +
+        configuration.getPaymentsPort();
+    String stylingUrl = "http://" + configuration.getStylingHost() + ":" +
+        configuration.getStylingPort();
     String deliveryUrl = "http://" + configuration.getDeliveryHost() + ":" +
         configuration.getDeliveryPort();
     WavefrontJerseyFactory factory = new WavefrontJerseyFactory(
@@ -63,6 +69,10 @@ public class ShoppingService extends Application<DropwizardServiceConfig> {
     dropwizardReporter.start();
     environment.jersey().register(factory.getWavefrontJerseyFilter());
     environment.jersey().register(new ShoppingWebResource(
+        BeachShirtsUtils.createProxyClient(inventoryUrl, InventoryApi.class,
+            factory.getWavefrontJaxrsClientFilter()),
+        BeachShirtsUtils.createProxyClient(paymentsUrl, PaymentsApi.class,
+            factory.getWavefrontJaxrsClientFilter()),
         BeachShirtsUtils.createProxyClient(stylingUrl, StylingApi.class,
             factory.getWavefrontJaxrsClientFilter()),
         BeachShirtsUtils.createProxyClient(deliveryUrl, DeliveryApi.class,
@@ -72,13 +82,18 @@ public class ShoppingService extends Application<DropwizardServiceConfig> {
   @Path("/shop")
   @Produces(MediaType.APPLICATION_JSON)
   public class ShoppingWebResource {
+    private final InventoryApi inventoryApi;
+    private final PaymentsApi paymentsApi;
     private final StylingApi stylingApi;
     private final DeliveryApi deliveryApi;
     private final AtomicInteger updateInventory = new AtomicInteger(0);
 
-    public ShoppingWebResource(StylingApi stylingApi, DeliveryApi deliveryApi) {
+    public ShoppingWebResource(InventoryApi inventoryApi, PaymentsApi paymentsApi,
+                               StylingApi stylingApi, DeliveryApi deliveryApi) {
+      this.inventoryApi = inventoryApi;
       this.stylingApi = stylingApi;
       this.deliveryApi = deliveryApi;
+      this.paymentsApi = paymentsApi;
     }
 
     @GET
@@ -102,6 +117,8 @@ public class ShoppingService extends Application<DropwizardServiceConfig> {
         e.printStackTrace();
       }
       String orderNum = UUID.randomUUID().toString();
+      inventoryApi.available(orderDTO.getStyleName());
+      paymentsApi.pay(orderNum, orderDTO.getPayment());
       PackedShirtsDTO packedShirts = stylingApi.makeShirts(
           orderDTO.getStyleName(), orderDTO.getQuantity());
       Response deliveryResponse = deliveryApi.dispatch(orderNum, packedShirts);

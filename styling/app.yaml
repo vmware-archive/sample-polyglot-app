@@ -6,9 +6,11 @@ server:
   - type: http
     port: 50151
 
+inventoryPort: 60001
 printingPort: 50052
 packagingPort: 50053
 
+inventoryHost: "localhost"
 printingHost: "localhost"
 packagingHost: "localhost"
 

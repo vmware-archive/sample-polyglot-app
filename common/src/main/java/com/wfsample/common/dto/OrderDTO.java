@@ -8,6 +8,7 @@ package com.wfsample.common.dto;
 public class OrderDTO {
   String styleName;
   int quantity;
+  PaymentDTO payment;
 
   public String getStyleName() {
     return styleName;
@@ -23,5 +24,13 @@ public class OrderDTO {
 
   public void setQuantity(int quantity) {
     this.quantity = quantity;
+  }
+
+  public PaymentDTO getPayment() {
+    return payment;
+  }
+
+  public void setPayment(PaymentDTO payment) {
+    this.payment = payment;
   }
 }

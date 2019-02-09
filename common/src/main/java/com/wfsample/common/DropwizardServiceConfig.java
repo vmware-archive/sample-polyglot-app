@@ -36,6 +36,18 @@ public class DropwizardServiceConfig extends Configuration {
   private int deliveryPort = 50054;
 
   /**
+   * Port on which payments service is running.
+   */
+  @JsonProperty
+  private int paymentsPort = 50063;
+
+  /**
+   * Port on which inventory service is running.
+   */
+  @JsonProperty
+  private int inventoryPort = 50061;
+
+  /**
    * Host on which the styling service is running.
    */
   @JsonProperty
@@ -58,6 +70,18 @@ public class DropwizardServiceConfig extends Configuration {
    */
   @JsonProperty
   private String deliveryHost = "deliveryService";
+
+  /**
+   * Host on which the payments service is running.
+   */
+  @JsonProperty
+  private String paymentsHost = "paymentsService";
+
+  /**
+   * Host on which the Inventory service is running.
+   */
+  @JsonProperty
+  private String inventoryHost = "inventoryService";
 
   /**
    * Path to the Application tags yaml file.
@@ -87,6 +111,14 @@ public class DropwizardServiceConfig extends Configuration {
     return deliveryPort;
   }
 
+  public int getPaymentsPort() {
+    return paymentsPort;
+  }
+
+  public int getInventoryPort() {
+    return inventoryPort;
+  }
+
   public String getStylingHost() {
     return stylingHost;
   }
@@ -101,6 +133,14 @@ public class DropwizardServiceConfig extends Configuration {
 
   public String getDeliveryHost() {
     return deliveryHost;
+  }
+
+  public String getPaymentsHost() {
+    return paymentsHost;
+  }
+
+  public String getInventoryHost() {
+    return inventoryHost;
   }
 
   public String getApplicationTagsYamlFile() {
