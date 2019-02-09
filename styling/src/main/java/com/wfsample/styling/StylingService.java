@@ -3,6 +3,7 @@ package com.wfsample.styling;
 import com.wavefront.sdk.dropwizard.reporter.WavefrontDropwizardReporter;
 import com.wavefront.sdk.grpc.WavefrontClientInterceptor;
 import com.wavefront.sdk.grpc.reporter.WavefrontGrpcReporter;
+import com.wavefront.sdk.jaxrs.client.WavefrontJaxrsClientFilter;
 import com.wavefront.sdk.jersey.WavefrontJerseyFactory;
 import com.wfsample.beachshirts.Color;
 import com.wfsample.beachshirts.PackagingGrpc;
@@ -13,9 +14,11 @@ import com.wfsample.beachshirts.ShirtStyle;
 import com.wfsample.beachshirts.Void;
 import com.wfsample.beachshirts.WrapRequest;
 import com.wfsample.beachshirts.WrappingType;
+import com.wfsample.common.BeachShirtsUtils;
 import com.wfsample.common.DropwizardServiceConfig;
 import com.wfsample.common.dto.PackedShirtsDTO;
 import com.wfsample.common.dto.ShirtStyleDTO;
+import com.wfsample.service.InventoryApi;
 import com.wfsample.service.StylingApi;
 
 import java.util.ArrayList;
@@ -46,9 +49,10 @@ public class StylingService extends Application<DropwizardServiceConfig> {
   }
 
   @Override
-  public void run(DropwizardServiceConfig configuration, Environment environment)
-      throws Exception {
+  public void run(DropwizardServiceConfig configuration, Environment environment) {
     this.configuration = configuration;
+    String inventoryUrl = "http://" + configuration.getInventoryHost() + ":" +
+        configuration.getInventoryPort();
     WavefrontJerseyFactory factory = new WavefrontJerseyFactory(
         configuration.getApplicationTagsYamlFile(), configuration.getWfReportingConfigYamlFile());
     WavefrontDropwizardReporter dropwizardReporter = new WavefrontDropwizardReporter.Builder(
@@ -67,16 +71,21 @@ public class StylingService extends Application<DropwizardServiceConfig> {
         new WavefrontClientInterceptor.Builder(grpcReporter, factory.getApplicationTags()).
             withTracer(factory.getTracer()).recordStreamingStats().build();
     environment.jersey().register(factory.getWavefrontJerseyFilter());
-    environment.jersey().register(new StylingWebResource(interceptor));
+    environment.jersey().register(new StylingWebResource(
+        BeachShirtsUtils.createProxyClient(inventoryUrl, InventoryApi.class,
+        factory.getWavefrontJaxrsClientFilter()),interceptor));
   }
 
   public class StylingWebResource implements StylingApi {
     private final PrintingGrpc.PrintingBlockingStub printing;
     private final PackagingGrpc.PackagingBlockingStub packaging;
+    private final InventoryApi inventoryApi;
     // sample set of static styles.
     private List<ShirtStyleDTO> shirtStyleDTOS = new ArrayList<>();
 
-    public StylingWebResource(WavefrontClientInterceptor clientInterceptor) {
+    public StylingWebResource(InventoryApi inventoryApi,
+                              WavefrontClientInterceptor clientInterceptor) {
+      this.inventoryApi = inventoryApi;
       ShirtStyleDTO dto = new ShirtStyleDTO();
       dto.setName("style1");
       dto.setImageUrl("style1Image");
@@ -95,7 +104,6 @@ public class StylingService extends Application<DropwizardServiceConfig> {
           usePlaintext().build();
       printing = PrintingGrpc.newBlockingStub(printingChannel);
       packaging = PackagingGrpc.newBlockingStub(packagingChannel);
-
     }
 
     public List<ShirtStyleDTO> getAllStyles() {
@@ -114,6 +122,7 @@ public class StylingService extends Application<DropwizardServiceConfig> {
     public PackedShirtsDTO makeShirts(String id, int quantity) {
       try {
         Thread.sleep(20);
+        inventoryApi.checkout(id);
         Iterator<Shirt> shirts = printing.printShirts(PrintRequest.newBuilder().
             setStyleToPrint(ShirtStyle.newBuilder().setName(id).setImageUrl(id + "Image").build()).
             setQuantity(quantity).build());
