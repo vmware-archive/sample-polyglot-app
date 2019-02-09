@@ -1,6 +1,7 @@
 package com.wfsample.service;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
@@ -17,7 +18,7 @@ public interface InventoryApi {
   @Path("available/{itemId}")
   Response available(@PathParam("itemId") String itemId);
 
-  @GET
+  @POST
   @Path("checkout/{cartId}")
   Response checkout(@PathParam("cartId") String cartId);
 }
