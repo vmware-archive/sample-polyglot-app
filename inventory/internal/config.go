@@ -1,14 +1,13 @@
 package internal
 
 type InventoryConfig struct {
-	Application      string
-	Service          string
-	CheckoutHost     string
-	AvailabilityHost string
-	WarehouseHost    string
+	Application   string
+	Service       string
+	InventoryHost string
+	WarehouseHost string
 
-	Server           string
-	Token            string
+	Server string
+	Token  string
 
 	// simulation
 	SimFailCheckout  float32
@@ -24,14 +23,13 @@ var GlobalConfig InventoryConfig
 
 func InitGlobalConfig() {
 	GlobalConfig = InventoryConfig{
-		Application:      "",
-		Service:          "",
-		CheckoutHost:     "localhost:50050",
-		AvailabilityHost: "localhost:50052",
-		WarehouseHost:    "localhost:50054",
+		Application:   "",
+		Service:       "",
+		InventoryHost: "localhost:60001",
+		WarehouseHost: "localhost:50060",
 
-		Server:           "",
-		Token:            "",
+		Server: "",
+		Token:  "",
 
 		SimFailCheckout:  0.1,
 		SimFailStyling:   0.2,

@@ -20,10 +20,10 @@ func NewGlobalTracer(serviceName string) io.Closer {
 	if GlobalConfig.Server == "" || GlobalConfig.Token == "" {
 		log.Fatal("missing server and token")
 	}
-	
+
 	config := &senders.DirectConfiguration{
 		Server: GlobalConfig.Server,
-		Token: GlobalConfig.Token,
+		Token:  GlobalConfig.Token,
 	}
 	sender, err := senders.NewDirectSender(config)
 	if err != nil {

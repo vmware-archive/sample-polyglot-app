@@ -4,10 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"wavefront.com/polyglot/inventory/services/inventory"
 
 	. "wavefront.com/polyglot/inventory/internal"
-	"wavefront.com/polyglot/inventory/services/availability"
-	"wavefront.com/polyglot/inventory/services/checkout"
 )
 
 func main() {
@@ -33,18 +32,7 @@ func main() {
 	closer := NewGlobalTracer(GlobalConfig.Service)
 	defer closer.Close()
 
-	switch GlobalConfig.Service {
-	case "availability":
-		server = availability.NewServer()
-
-	case "checkout":
-		server = checkout.NewServer()
-
-	default:
-		fmt.Printf("Unrecognized inventory service: %s\n", os.Args[1])
-		os.Exit(1)
-	}
-
+	server = inventory.NewServer()
 	if serr := server.Start(); serr != nil {
 		fmt.Println(serr.Error())
 		os.Exit(1)
