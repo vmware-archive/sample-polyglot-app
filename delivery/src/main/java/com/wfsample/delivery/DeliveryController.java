@@ -3,6 +3,9 @@ package com.wfsample.delivery;
 import com.wfsample.common.dto.DeliveryStatusDTO;
 import com.wfsample.common.dto.PackedShirtsDTO;
 import com.wfsample.service.DeliveryApi;
+import com.wfsample.service.NotificationApi;
+
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,6 +19,8 @@ import javax.ws.rs.core.Response;
  * @author Hao Song (songhao@vmware.com).
  */
 public class DeliveryController implements DeliveryApi {
+  @Autowired
+  private NotificationApi notificationApi;
   AtomicInteger tracking = new AtomicInteger(0);
   AtomicInteger dispatch = new AtomicInteger(0);
   AtomicInteger cancel = new AtomicInteger(0);
@@ -27,12 +32,13 @@ public class DeliveryController implements DeliveryApi {
           new DeliveryStatusDTO(null, "no shirts to deliver")).build();
     }
     try {
-      Thread.sleep(90);
+      Thread.sleep(70);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
     String trackingNum = UUID.randomUUID().toString();
     System.out.println("Tracking number of Order:" + orderNum + " is " + trackingNum);
+    notificationApi.notify(trackingNum);
     return Response.ok(new DeliveryStatusDTO(trackingNum, "shirts delivery dispatched")).build();
   }
 

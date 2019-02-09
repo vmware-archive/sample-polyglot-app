@@ -44,6 +44,11 @@ public class NotificationService implements NotificationApi {
     ExecutorService executorService = new TracedExecutorService(
         Executors.newFixedThreadPool(1), tracer);
     executorService.submit(new InternalNotifyService());
+    try {
+      Thread.sleep(10);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
     return Response.accepted().build();
   }
 
