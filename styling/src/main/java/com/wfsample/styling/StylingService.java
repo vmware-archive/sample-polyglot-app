@@ -3,7 +3,6 @@ package com.wfsample.styling;
 import com.wavefront.sdk.dropwizard.reporter.WavefrontDropwizardReporter;
 import com.wavefront.sdk.grpc.WavefrontClientInterceptor;
 import com.wavefront.sdk.grpc.reporter.WavefrontGrpcReporter;
-import com.wavefront.sdk.jaxrs.client.WavefrontJaxrsClientFilter;
 import com.wavefront.sdk.jersey.WavefrontJerseyFactory;
 import com.wfsample.beachshirts.Color;
 import com.wfsample.beachshirts.PackagingGrpc;
@@ -122,7 +121,10 @@ public class StylingService extends Application<DropwizardServiceConfig> {
     public PackedShirtsDTO makeShirts(String id, int quantity) {
       try {
         Thread.sleep(20);
-        inventoryApi.checkout(id);
+        Response checkoutResponse = inventoryApi.checkout(id);
+        if (checkoutResponse.getStatus() != 200) {
+          throw new RuntimeException("unable to checkout resources from inventory");
+        }
         Iterator<Shirt> shirts = printing.printShirts(PrintRequest.newBuilder().
             setStyleToPrint(ShirtStyle.newBuilder().setName(id).setImageUrl(id + "Image").build()).
             setQuantity(quantity).build());

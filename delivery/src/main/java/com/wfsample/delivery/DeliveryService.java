@@ -2,7 +2,6 @@ package com.wfsample.delivery;
 
 import com.wavefront.sdk.jersey.WavefrontJerseyFactory;
 import com.wfsample.common.BeachShirtsUtils;
-import com.wfsample.service.DeliveryApi;
 import com.wfsample.service.NotificationApi;
 
 import org.springframework.boot.SpringApplication;

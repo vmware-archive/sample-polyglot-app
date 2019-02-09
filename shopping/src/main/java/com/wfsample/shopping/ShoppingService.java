@@ -8,7 +8,6 @@ import com.wfsample.common.dto.DeliveryStatusDTO;
 import com.wfsample.common.dto.OrderDTO;
 import com.wfsample.common.dto.OrderStatusDTO;
 import com.wfsample.common.dto.PackedShirtsDTO;
-import com.wfsample.common.dto.PaymentDTO;
 import com.wfsample.service.DeliveryApi;
 import com.wfsample.service.InventoryApi;
 import com.wfsample.service.PaymentsApi;
@@ -117,8 +116,16 @@ public class ShoppingService extends Application<DropwizardServiceConfig> {
         e.printStackTrace();
       }
       String orderNum = UUID.randomUUID().toString();
-      inventoryApi.available(orderDTO.getStyleName());
-      paymentsApi.pay(orderNum, orderDTO.getPayment());
+      Response inventoryResponse = inventoryApi.available(orderDTO.getStyleName());
+      if (inventoryResponse.getStatus() != 200) {
+        return Response.status(inventoryResponse.getStatus()).entity("Items out of stock, " +
+            "please try again later").build();
+      }
+      Response paymentResponse = paymentsApi.pay(orderNum, orderDTO.getPayment());
+      if (paymentResponse.getStatus() != 200) {
+        return Response.status(paymentResponse.getStatus()).entity("Payment not successful, " +
+            "please try again later").build();
+      }
       PackedShirtsDTO packedShirts = stylingApi.makeShirts(
           orderDTO.getStyleName(), orderDTO.getQuantity());
       Response deliveryResponse = deliveryApi.dispatch(orderNum, packedShirts);
