@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"os"
 	"wavefront.com/polyglot/inventory/services/inventory"
 
@@ -11,30 +11,24 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Printf("Usage: inventory <config_file>\n")
-		os.Exit(1)
+		log.Fatal("usage: inventory <config_file>")
 	}
 
 	InitGlobalConfig()
 
-	file, ferr := os.Open(os.Args[1])
-	if ferr != nil {
-		fmt.Println(ferr)
-		os.Exit(2)
+	file, err := os.Open(os.Args[1])
+	if err != nil {
+		log.Fatalf("error reading config: %q", err)
 	}
 	if derr := json.NewDecoder(file).Decode(&GlobalConfig); derr != nil {
-		fmt.Println(derr)
-		os.Exit(2)
+		log.Fatalf("error decoding config: %q", derr)
 	}
-
-	var server Server
 
 	closer := NewGlobalTracer(GlobalConfig.Service)
 	defer closer.Close()
 
-	server = inventory.NewServer()
+	server := inventory.NewServer()
 	if serr := server.Start(); serr != nil {
-		fmt.Println(serr.Error())
-		os.Exit(1)
+		log.Fatalf("error starting inventory service: %q", serr)
 	}
 }
