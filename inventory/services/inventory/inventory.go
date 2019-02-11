@@ -60,7 +60,7 @@ func (s *InventoryService) available(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *InventoryService) checkout(w http.ResponseWriter, r *http.Request) {
-	span := s.tracer.StartSpan("checkout")
+	span := NewServerSpan(r, "checkout")
 	defer span.Finish()
 
 	RandSimDelay()
