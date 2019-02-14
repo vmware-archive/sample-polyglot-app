@@ -1,4 +1,4 @@
-application: beachshirts
+application: beachshirts-polyglot
 cluster: us-west
 service: packaging
 shard: primary
