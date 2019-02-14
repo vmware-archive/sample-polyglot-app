@@ -35,10 +35,17 @@ func NewGlobalTracer(serviceName string) io.Closer {
 		appName = "beachshirts"
 	}
 	appTags := application.New(appName, serviceName)
+	appTags.Cluster = GlobalConfig.Cluster
+	appTags.Shard = GlobalConfig.Shard
 
-	directReporter := reporter.New(sender, appTags)
+	var directReporter reporter.WavefrontSpanReporter
+	if GlobalConfig.Source != "" {
+		directReporter = reporter.New(sender, appTags, reporter.Source(GlobalConfig.Source))
+	} else {
+		directReporter = reporter.New(sender, appTags)
+	}
+
 	consoleReporter := reporter.NewConsoleSpanReporter(serviceName)
-
 	compositeReporter := reporter.NewCompositeSpanReporter(directReporter, consoleReporter)
 	wavefrontTracer := wfTracer.New(compositeReporter)
 	opentracing.SetGlobalTracer(wavefrontTracer)

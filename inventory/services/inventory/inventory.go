@@ -40,14 +40,14 @@ func (s *InventoryService) available(w http.ResponseWriter, r *http.Request) {
 
 	RandSimDelay()
 
-	if RAND.Float32() < GlobalConfig.SimFailDelivery1 {
+	if RAND.Float32() < GlobalConfig.SimFailAvailable1 {
 		otrext.Error.Set(span, true)
 		WriteError(w, "Failed to check availability", http.StatusServiceUnavailable)
 		return
 	}
 
 	exists := true
-	if RAND.Float32() < GlobalConfig.SimFailDelivery2 {
+	if RAND.Float32() < GlobalConfig.SimFailAvailable2 {
 		exists = false
 	}
 

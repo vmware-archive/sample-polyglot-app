@@ -9,14 +9,19 @@ type InventoryConfig struct {
 	Server string
 	Token  string
 
+	Cluster string
+	Shard   string
+
+	Source string
+
 	// simulation
-	SimFailCheckout  float32
-	SimFailStyling   float32
-	SimFailDelivery1 float32
-	SimFailDelivery2 float32
-	SimFailDelivery3 float32
-	SimDelayChance   float32
-	SimDelayMS       int // milliseconds
+	SimFailCheckout   float32
+	SimFailStyling    float32
+	SimFailAvailable1 float32
+	SimFailAvailable2 float32
+	SimFailAvailable3 float32
+	SimDelayChance    float32
+	SimDelayMS        int // milliseconds
 }
 
 var GlobalConfig InventoryConfig
@@ -31,12 +36,15 @@ func InitGlobalConfig() {
 		Server: "",
 		Token:  "",
 
-		SimFailCheckout:  0.1,
-		SimFailStyling:   0.2,
-		SimFailDelivery1: 0.2,
-		SimFailDelivery2: 0.1,
-		SimFailDelivery3: 0.1,
-		SimDelayChance:   0.3333,
-		SimDelayMS:       1000,
+		Cluster: "us-west",
+		Shard:   "primary",
+
+		Source: "",
+
+		SimFailCheckout:   0.1,
+		SimFailAvailable1: 0.2,
+		SimFailAvailable2: 0.1,
+		SimDelayChance:    0.3333,
+		SimDelayMS:        1000,
 	}
 }
