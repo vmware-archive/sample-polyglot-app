@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -49,6 +51,11 @@ namespace Payments
                 .Build();
 
             string source = wfReportingConfig["source"];
+            if (string.IsNullOrWhiteSpace(source))
+            {
+                source = Dns.GetHostName();
+            }
+
             IWavefrontSender wavefrontSender = ConstructWavefrontSender(wfReportingConfig);
 
             WavefrontAspNetCoreReporter wfAspNetCoreReporter = new WavefrontAspNetCoreReporter

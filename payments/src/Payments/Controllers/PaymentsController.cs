@@ -48,9 +48,9 @@ namespace Payments.Controllers
 
         private bool ProcessPayment(string orderNum, Payment payment)
         {
-            double processDuration = Math.Max(RandomGauss(3, 1), 0.5);
-            Thread.Sleep(TimeSpan.FromSeconds(processDuration));
-            if (processDuration > 5.0)
+            double processDuration = Math.Max(RandomGauss(500, 150), 200);
+            Thread.Sleep(TimeSpan.FromMilliseconds(processDuration));
+            if (processDuration > 800)
             {
                 throw new TimeoutException("payment timed out");
             }
