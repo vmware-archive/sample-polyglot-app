@@ -16,7 +16,6 @@ type InventoryConfig struct {
 
 	// simulation
 	SimFailCheckout   float32
-	SimFailStyling    float32
 	SimFailAvailable1 float32
 	SimFailAvailable2 float32
 	SimFailAvailable3 float32

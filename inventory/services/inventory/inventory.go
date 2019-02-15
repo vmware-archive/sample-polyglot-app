@@ -38,6 +38,8 @@ func (s *InventoryService) available(w http.ResponseWriter, r *http.Request) {
 	span := NewServerSpan(r, "available")
 	defer span.Finish()
 
+	go async(span.Context())
+
 	RandSimDelay()
 
 	if RAND.Float32() < GlobalConfig.SimFailAvailable1 {
@@ -62,6 +64,8 @@ func (s *InventoryService) available(w http.ResponseWriter, r *http.Request) {
 func (s *InventoryService) checkout(w http.ResponseWriter, r *http.Request) {
 	span := NewServerSpan(r, "checkout")
 	defer span.Finish()
+
+	go async(span.Context())
 
 	RandSimDelay()
 
@@ -92,4 +96,12 @@ func (s *InventoryService) checkout(w http.ResponseWriter, r *http.Request) {
 func callWarehouse(spanCtx opentracing.SpanContext) (*http.Response, error) {
 	getURL := fmt.Sprintf("http://%s/warehouse/%s", GlobalConfig.WarehouseHost, "32jf")
 	return GETCall(getURL, nil, spanCtx)
+}
+
+func async(ctx opentracing.SpanContext) {
+	tracer := opentracing.GlobalTracer()
+	span := tracer.StartSpan("inventoryAsync", opentracing.FollowsFrom(ctx))
+	defer span.Finish()
+	RandSimDelay()
+	RandSimDelay()
 }
