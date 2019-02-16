@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Threading;
-using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using OpenTracing;
+using OpenTracing.Tag;
 using Payments.Models;
 
 namespace Payments.Controllers
@@ -10,12 +12,21 @@ namespace Payments.Controllers
     public class PaymentsController : Controller
     {
         private readonly Random rand = new Random();
+        private readonly ITracer tracer;
+
+        public PaymentsController(ITracer tracer)
+        {
+            this.tracer = tracer;
+        }
 
         // POST pay
         [Route("pay/{orderNum}")]
         [HttpPost]
         public IActionResult Pay(string orderNum, Payment payment)
         {
+            double duration1 = Math.Max(RandomGauss(100, 25), 50);
+            Thread.Sleep(TimeSpan.FromMilliseconds(duration1));
+
             if (string.IsNullOrWhiteSpace(orderNum))
             {
                 return BadRequest("invalid order number");
@@ -29,44 +40,39 @@ namespace Payments.Controllers
                 return BadRequest("invalid credit card number");
             }
 
-            try
-            {
-                if (ProcessPayment(orderNum, payment))
-                {
-                    return Ok("success");
-                }
-                else
-                {
-                    return Ok("fail");
-                }
-            }
-            catch (Exception e)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
-            }
-        }
+            double duration2 = Math.Max(RandomGauss(100, 25), 50);
+            Thread.Sleep(TimeSpan.FromMilliseconds(duration2));
 
-        private bool ProcessPayment(string orderNum, Payment payment)
-        {
-            double processDuration = Math.Max(RandomGauss(500, 150), 200);
-            Thread.Sleep(TimeSpan.FromMilliseconds(processDuration));
-            if (processDuration > 800)
+            if (duration1 + duration2 > 270)
             {
                 throw new TimeoutException("payment timed out");
             }
 
-            double processResult = rand.NextDouble();
-            if (processResult < 0.1)
+            if (rand.NextDouble() < 0.1)
             {
                 throw new SystemException("payment server error");
-            } else if (processResult < 0.25)
-            {
-                return false;
             }
-            else
+
+            var context = tracer.ActiveSpan.Context;
+            Task.Run(async () => await UpdateAccountAsync(context));
+
+            return Accepted("payment accepted");
+        }
+
+        private async Task UpdateAccountAsync(ISpanContext context)
+        {
+            using (var scope = tracer.BuildSpan("UpdateAccountAsync")
+                    .AddReference(References.FollowsFrom, context)
+                    .StartActive())
             {
-                return true;
-            }
+                double randDuration = rand.NextDouble() / 3;
+                Thread.Sleep(TimeSpan.FromSeconds(1 + randDuration));
+                if (rand.NextDouble() < 0.1)
+                {
+                    scope.Span.SetTag(Tags.Error, true);
+                }
+                await Task.Delay(0);
+            };
         }
 
         private double RandomGauss(double mean, double stdDev)
