@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using OpenTracing;
 using OpenTracing.Tag;
 using Payments.Models;
-using Wavefront.OpenTracing.SDK.CSharp;
 
 namespace Payments.Controllers
 {
@@ -55,14 +54,14 @@ namespace Payments.Controllers
             }
 
             var context = tracer.ActiveSpan.Context;
-            Task.Run(async () => await PayAsync(context));
+            Task.Run(async () => await UpdateAccountAsync(context));
 
             return Accepted("payment accepted");
         }
 
-        private async Task PayAsync(ISpanContext context)
+        private async Task UpdateAccountAsync(ISpanContext context)
         {
-            using (var scope = tracer.BuildSpan("PayAsync")
+            using (var scope = tracer.BuildSpan("UpdateAccountAsync")
                     .AddReference(References.FollowsFrom, context)
                     .StartActive())
             {
