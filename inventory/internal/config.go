@@ -15,12 +15,10 @@ type InventoryConfig struct {
 	Source string
 
 	// simulation
-	SimFailCheckout   float32
-	SimFailAvailable1 float32
-	SimFailAvailable2 float32
-	SimFailAvailable3 float32
-	SimDelayChance    float32
-	SimDelayMS        int // milliseconds
+	SimFailCheckout  float32
+	SimFailAvailable float32
+	SimDelayChance   float32
+	SimDelayMS       int // milliseconds
 }
 
 var GlobalConfig InventoryConfig
@@ -40,10 +38,9 @@ func InitGlobalConfig() {
 
 		Source: "",
 
-		SimFailCheckout:   0.1,
-		SimFailAvailable1: 0.2,
-		SimFailAvailable2: 0.1,
-		SimDelayChance:    0.3333,
-		SimDelayMS:        1000,
+		SimFailCheckout:  0.02,
+		SimFailAvailable: 0.03,
+		SimDelayChance:   0.3333,
+		SimDelayMS:       1000,
 	}
 }

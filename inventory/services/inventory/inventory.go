@@ -42,14 +42,8 @@ func (s *InventoryService) available(w http.ResponseWriter, r *http.Request) {
 
 	RandSimDelay()
 
-	if RAND.Float32() < GlobalConfig.SimFailAvailable1 {
-		otrext.Error.Set(span, true)
-		WriteError(w, "Failed to check availability", http.StatusServiceUnavailable)
-		return
-	}
-
 	exists := true
-	if RAND.Float32() < GlobalConfig.SimFailAvailable2 {
+	if RAND.Float32() < GlobalConfig.SimFailAvailable {
 		exists = false
 	}
 
@@ -85,7 +79,7 @@ func (s *InventoryService) checkout(w http.ResponseWriter, r *http.Request) {
 
 	RandSimDelay()
 
-	if resp.StatusCode == http.StatusOK {
+	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusAccepted {
 		io.Copy(w, resp.Body)
 	} else {
 		otrext.Error.Set(span, true)
