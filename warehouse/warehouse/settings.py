@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 import yaml
+import socket
 from wavefront_sdk.common import heartbeater_service
 from wavefront_opentracing_sdk.reporting import CompositeReporter, \
     WavefrontSpanReporter, ConsoleReporter
@@ -19,8 +20,7 @@ from wavefront_pyformance.tagged_registry import TaggedRegistry
 from wavefront_sdk.common import ApplicationTags
 from wavefront_opentracing_sdk import reporting, WavefrontTracer
 from wavefront_django_sdk import DjangoTracing
-from wavefront_pyformance.wavefront_reporter import WavefrontDirectReporter, \
-    WavefrontProxyClient
+from wavefront_pyformance.wavefront_reporter import WavefrontDirectReporter
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -147,7 +147,8 @@ if WF_REPORTING_CONFIG and \
         server=WF_REPORTING_CONFIG.get('server'),
         token=WF_REPORTING_CONFIG.get('token'),
         reporting_interval=5,
-    )
+        source=WF_REPORTING_CONFIG.get('source') or socket.gethostname()
+    ).report_minute_distribution()
 
 SPAN_REPORTER = WavefrontSpanReporter(client=WF_REPORTER.wavefront_client)
 
