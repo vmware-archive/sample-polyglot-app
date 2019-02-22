@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 tracing = settings.OPENTRACING_TRACING
 tracer = tracing.tracer
+executor = ThreadPoolExecutor(max_workers=2)
 
 
 @api_view(http_method_names=["GET"])
@@ -24,9 +25,7 @@ def fetch(request, order_num):
         msg = "Invalid Order Num!"
         logging.warning(msg)
         return Response(msg, status=400)
-    executor = ThreadPoolExecutor(max_workers=2)
     executor.submit(async_fetch, tracer.active_span)
-    executor.shutdown(wait=False)
     return Response(
         data={"status": "Order:" + order_num + " fetched from warehouse"},
         status=202)
