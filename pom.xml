@@ -125,23 +125,12 @@
         <dependency>
             <groupId>com.wavefront</groupId>
             <artifactId>wavefront-jersey-sdk-java</artifactId>
-            <version>0.9.1</version>
+            <version>0.9.3</version>
         </dependency>
         <dependency>
             <groupId>com.wavefront</groupId>
             <artifactId>wavefront-grpc-sdk-java</artifactId>
-            <version>0.9.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.wavefront</groupId>
-            <artifactId>wavefront-dropwizard-sdk-java</artifactId>
-            <version>0.9.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.wavefront</groupId>
-            <artifactId>wavefront-jaxrs-sdk-java</artifactId>
-            <!--TODO: Change to 0.9.1 once released-->
-            <version>0.9.1-SNAPSHOT</version>
+            <version>0.9.2</version>
         </dependency>
     </dependencies>
 

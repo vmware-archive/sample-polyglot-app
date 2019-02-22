@@ -1,6 +1,5 @@
 package com.wfsample.shopping;
 
-import com.wavefront.sdk.dropwizard.reporter.WavefrontDropwizardReporter;
 import com.wavefront.sdk.jersey.WavefrontJerseyFactory;
 import com.wfsample.common.BeachShirtsUtils;
 import com.wfsample.common.DropwizardServiceConfig;
@@ -60,12 +59,6 @@ public class ShoppingService extends Application<DropwizardServiceConfig> {
         configuration.getDeliveryPort();
     WavefrontJerseyFactory factory = new WavefrontJerseyFactory(
         configuration.getApplicationTagsYamlFile(), configuration.getWfReportingConfigYamlFile());
-    WavefrontDropwizardReporter dropwizardReporter = new WavefrontDropwizardReporter.Builder(
-        environment.metrics(), factory.getApplicationTags()).
-        withSource(factory.getSource()).
-        reportingIntervalSeconds(30).
-        build(factory.getWavefrontSender());
-    dropwizardReporter.start();
     environment.jersey().register(factory.getWavefrontJerseyFilter());
     environment.jersey().register(new ShoppingWebResource(
         BeachShirtsUtils.createProxyClient(inventoryUrl, InventoryApi.class,
@@ -117,12 +110,12 @@ public class ShoppingService extends Application<DropwizardServiceConfig> {
       }
       String orderNum = UUID.randomUUID().toString();
       Response inventoryResponse = inventoryApi.available(orderDTO.getStyleName());
-      if (inventoryResponse.getStatus() != 200) {
+      if (inventoryResponse.getStatus() >= 400) {
         return Response.status(inventoryResponse.getStatus()).entity("Items out of stock, " +
             "please try again later").build();
       }
       Response paymentResponse = paymentsApi.pay(orderNum, orderDTO.getPayment());
-      if (paymentResponse.getStatus() != 200) {
+      if (paymentResponse.getStatus() >= 400) {
         return Response.status(paymentResponse.getStatus()).entity("Payment not successful, " +
             "please try again later").build();
       }
