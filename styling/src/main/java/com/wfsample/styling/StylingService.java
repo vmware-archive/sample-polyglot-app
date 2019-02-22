@@ -1,6 +1,5 @@
 package com.wfsample.styling;
 
-import com.wavefront.sdk.dropwizard.reporter.WavefrontDropwizardReporter;
 import com.wavefront.sdk.grpc.WavefrontClientInterceptor;
 import com.wavefront.sdk.grpc.reporter.WavefrontGrpcReporter;
 import com.wavefront.sdk.jersey.WavefrontJerseyFactory;
@@ -54,12 +53,6 @@ public class StylingService extends Application<DropwizardServiceConfig> {
         configuration.getInventoryPort();
     WavefrontJerseyFactory factory = new WavefrontJerseyFactory(
         configuration.getApplicationTagsYamlFile(), configuration.getWfReportingConfigYamlFile());
-    WavefrontDropwizardReporter dropwizardReporter = new WavefrontDropwizardReporter.Builder(
-        environment.metrics(), factory.getApplicationTags()).
-        withSource(factory.getSource()).
-        reportingIntervalSeconds(30).
-        build(factory.getWavefrontSender());
-    dropwizardReporter.start();
     WavefrontGrpcReporter grpcReporter = new WavefrontGrpcReporter.Builder(
         factory.getApplicationTags()).
         withSource(factory.getSource()).
@@ -122,7 +115,7 @@ public class StylingService extends Application<DropwizardServiceConfig> {
       try {
         Thread.sleep(20);
         Response checkoutResponse = inventoryApi.checkout(id);
-        if (checkoutResponse.getStatus() != 200) {
+        if (checkoutResponse.getStatus() >= 400) {
           throw new RuntimeException("unable to checkout resources from inventory");
         }
         Iterator<Shirt> shirts = printing.printShirts(PrintRequest.newBuilder().

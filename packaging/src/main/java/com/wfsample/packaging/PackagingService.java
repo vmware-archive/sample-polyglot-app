@@ -113,7 +113,7 @@ public class PackagingService {
         int resp = (int) Math.round(random.nextDouble() *
             100.0) + 10000;
         try {
-          Thread.sleep(1400);
+          Thread.sleep(7400);
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
