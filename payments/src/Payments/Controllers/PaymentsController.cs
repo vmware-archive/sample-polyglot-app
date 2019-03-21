@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OpenTracing;
 using OpenTracing.Tag;
@@ -43,14 +44,9 @@ namespace Payments.Controllers
             double duration2 = Math.Max(RandomGauss(100, 25), 50);
             Thread.Sleep(TimeSpan.FromMilliseconds(duration2));
 
-            if (duration1 + duration2 > 270)
+            if (rand.NextDouble() < 0.05)
             {
-                throw new TimeoutException("payment timed out");
-            }
-
-            if (rand.NextDouble() < 0.1)
-            {
-                throw new SystemException("payment server error");
+                return StatusCode(StatusCodes.Status500InternalServerError, "payment server error");
             }
 
             var context = tracer.ActiveSpan.Context;
@@ -67,7 +63,7 @@ namespace Payments.Controllers
             {
                 double randDuration = rand.NextDouble() / 3;
                 Thread.Sleep(TimeSpan.FromSeconds(1 + randDuration));
-                if (rand.NextDouble() < 0.1)
+                if (rand.NextDouble() < 0.05)
                 {
                     scope.Span.SetTag(Tags.Error, true);
                 }
