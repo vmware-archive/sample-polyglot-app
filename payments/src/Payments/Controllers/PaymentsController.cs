@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OpenTracing;
-using OpenTracing.Tag;
 using Payments.Models;
 
 namespace Payments.Controllers
@@ -28,6 +26,7 @@ namespace Payments.Controllers
             double duration1 = Math.Max(RandomGauss(100, 25), 50);
             Thread.Sleep(TimeSpan.FromMilliseconds(duration1));
 
+            /*
             if (string.IsNullOrWhiteSpace(orderNum))
             {
                 return BadRequest("invalid order number");
@@ -40,14 +39,17 @@ namespace Payments.Controllers
             {
                 return BadRequest("invalid credit card number");
             }
+            */
 
             double duration2 = Math.Max(RandomGauss(100, 25), 50);
             Thread.Sleep(TimeSpan.FromMilliseconds(duration2));
 
+            /*
             if (rand.NextDouble() < 0.05)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "payment server error");
             }
+            */
 
             var context = tracer.ActiveSpan.Context;
             Task.Run(async () => await UpdateAccountAsync(context));
@@ -63,10 +65,12 @@ namespace Payments.Controllers
             {
                 double randDuration = rand.NextDouble() / 3;
                 Thread.Sleep(TimeSpan.FromSeconds(1 + randDuration));
+                /*
                 if (rand.NextDouble() < 0.05)
                 {
                     scope.Span.SetTag(Tags.Error, true);
                 }
+                */
                 await Task.Delay(0);
             };
         }
