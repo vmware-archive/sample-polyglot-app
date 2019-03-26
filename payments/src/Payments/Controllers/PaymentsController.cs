@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OpenTracing;
 using OpenTracing.Tag;
@@ -24,8 +25,7 @@ namespace Payments.Controllers
         [HttpPost]
         public IActionResult Pay(string orderNum, Payment payment)
         {
-            double duration1 = Math.Max(RandomGauss(100, 25), 50);
-            Thread.Sleep(TimeSpan.FromMilliseconds(duration1));
+            Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(40, 10), 20)));
 
             if (string.IsNullOrWhiteSpace(orderNum))
             {
@@ -40,23 +40,84 @@ namespace Payments.Controllers
                 return BadRequest("invalid credit card number");
             }
 
-            double duration2 = Math.Max(RandomGauss(100, 25), 50);
-            Thread.Sleep(TimeSpan.FromMilliseconds(duration2));
-
-            if (duration1 + duration2 > 270)
-            {
-                throw new TimeoutException("payment timed out");
-            }
-
-            if (rand.NextDouble() < 0.1)
-            {
-                throw new SystemException("payment server error");
-            }
-
             var context = tracer.ActiveSpan.Context;
-            Task.Run(async () => await UpdateAccountAsync(context));
+            IActionResult result = rand.NextDouble() < 0.5 ? FastPay(context) : ProcessPayment(context);
+            Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(20, 5), 10)));
 
-            return Accepted("payment accepted");
+            Task.Run(async () => await UpdateAccountAsync(context));
+            Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(10, 2), 5)));
+
+            return result;
+        }
+
+        private IActionResult FastPay(ISpanContext context)
+        {
+            using (var scope = tracer.BuildSpan("FastPay")
+                    .AddReference(References.ChildOf, context)
+                    .StartActive())
+            {
+                Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(80, 20), 40)));
+                if (rand.NextDouble() < 0.001)
+                {
+                    scope.Span.SetTag(Tags.Error, true);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "fast pay failed");
+                }
+                return Accepted("fast pay accepted");
+            };
+        }
+
+        private IActionResult ProcessPayment(ISpanContext context)
+        {
+            using (var scope = tracer.BuildSpan("ProcessPayment")
+                    .AddReference(References.ChildOf, context)
+                    .StartActive())
+            {
+                Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(25, 5), 15)));
+                if (rand.NextDouble() < 0.001)
+                {
+                    scope.Span.SetTag(Tags.Error, true);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "payment failed");
+                }
+
+                if (!AuthorizePayment(scope.Span.Context))
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, "payment authorization failed");
+                }
+                Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(15, 3), 10)));
+                return FinishPayment(scope.Span.Context);
+            };
+        }
+
+        private bool AuthorizePayment(ISpanContext context)
+        {
+            using (var scope = tracer.BuildSpan("AuthorizePayment")
+                    .AddReference(References.ChildOf, context)
+                    .StartActive())
+            {
+                Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(100, 25), 50)));
+                if (rand.NextDouble() < 0.001)
+                {
+                    scope.Span.SetTag(Tags.Error, true);
+                    return false;
+                }
+                return true;
+            };
+        }
+
+        private IActionResult FinishPayment(ISpanContext context)
+        {
+            using (var scope = tracer.BuildSpan("FinishPayment")
+                    .AddReference(References.ChildOf, context)
+                    .StartActive())
+            {
+                Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(60, 15), 30)));
+                if (rand.NextDouble() < 0.001)
+                {
+                    scope.Span.SetTag(Tags.Error, true);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "payment failed");
+                }
+                return Accepted("payment accepted");
+            };
         }
 
         private async Task UpdateAccountAsync(ISpanContext context)
@@ -67,7 +128,7 @@ namespace Payments.Controllers
             {
                 double randDuration = rand.NextDouble() / 3;
                 Thread.Sleep(TimeSpan.FromSeconds(1 + randDuration));
-                if (rand.NextDouble() < 0.1)
+                if (rand.NextDouble() < 0.001)
                 {
                     scope.Span.SetTag(Tags.Error, true);
                 }
