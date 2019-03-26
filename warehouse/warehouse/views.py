@@ -17,7 +17,7 @@ executor = ThreadPoolExecutor(max_workers=2)
 @api_view(http_method_names=["GET"])
 def fetch(request, order_num):
     time.sleep(1)
-    if random.randint(1, 8) == 8:
+    if random.randint(1, 1000) == 1000:
         msg = "Random Service Unavailable!"
         logging.warning(msg)
         return Response(msg, status=503)
@@ -35,6 +35,6 @@ def async_fetch(parent_span):
     with tracer.scope_manager.activate(parent_span, finish_on_close=True):
         with tracer.start_active_span('async_fetch') as scope:
             time.sleep(2)
-            if random.randint(1, 8) == 8:
+            if random.randint(1, 1000) == 1000:
                 scope.span.set_tag("error", "true")
             return
