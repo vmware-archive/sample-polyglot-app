@@ -20,5 +20,6 @@ from . import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('warehouse/<slug:order_num>', views.fetch,
-         name='warehouse/{order_num}')
+         name='warehouse/{order_num}'),
+    path('check_stock', views.check_stock, name='check_stock')
 ]
