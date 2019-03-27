@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -14,10 +15,12 @@ namespace Payments.Controllers
     {
         private readonly Random rand = new Random();
         private readonly ITracer tracer;
+        private readonly HttpClient httpClient;
 
         public PaymentsController(ITracer tracer)
         {
             this.tracer = tracer;
+            this.httpClient = new HttpClient();
         }
 
         // POST pay
@@ -25,6 +28,12 @@ namespace Payments.Controllers
         [HttpPost]
         public IActionResult Pay(string orderNum, Payment payment)
         {
+            if (rand.NextDouble() < 0.01)
+            {
+                string url = $"{Request.Scheme}://{Request.Host.ToUriComponent()}/health";
+                Task.Run(async () => await httpClient.GetAsync(url));
+            }
+
             Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(40, 10), 20)));
 
             if (string.IsNullOrWhiteSpace(orderNum))
@@ -127,13 +136,80 @@ namespace Payments.Controllers
                     .StartActive())
             {
                 double randDuration = rand.NextDouble() / 3;
-                Thread.Sleep(TimeSpan.FromSeconds(1 + randDuration));
+                await Task.Delay(TimeSpan.FromSeconds(1 + randDuration));
                 if (rand.NextDouble() < 0.001)
                 {
                     scope.Span.SetTag(Tags.Error, true);
                 }
-                await Task.Delay(0);
             };
+        }
+
+        // GET health
+        [Route("health")]
+        [HttpGet]
+        public async Task<IActionResult> GetHealthAsync()
+        {
+            Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(20, 5), 10)));
+            var context = tracer.ActiveSpan.Context;
+            if (await CheckHealthAsync(context))
+            {
+                return Ok("healthy");
+            }
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, "unavailable");
+        }
+
+        private async Task<bool> CheckHealthAsync(ISpanContext context)
+        {
+            using (var scope = tracer.BuildSpan("CheckHealthAsync")
+                    .AddReference(References.ChildOf, context)
+                    .StartActive())
+            {
+                Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(20, 5), 10)));
+                var taskDb = CheckDbHealthAsync(scope.Span.Context);
+                var taskAuth = CheckAuthHealthAsync(scope.Span.Context);
+                var results = await Task.WhenAll(taskDb, taskAuth);
+                foreach (bool healthy in results)
+                {
+                    if (!healthy)
+                    {
+                        scope.Span.SetTag(Tags.Error, true);
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        private async Task<bool> CheckDbHealthAsync(ISpanContext context)
+        {
+            using (var scope = tracer.BuildSpan("CheckDbHealthAsync")
+                    .AddReference(References.ChildOf, context)
+                    .StartActive())
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(50, 10), 30)));
+                if (rand.NextDouble() < 0.01)
+                {
+                    scope.Span.SetTag(Tags.Error, true);
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        private async Task<bool> CheckAuthHealthAsync(ISpanContext context)
+        {
+            using (var scope = tracer.BuildSpan("CheckAuthHealthAsync")
+                    .AddReference(References.ChildOf, context)
+                    .StartActive())
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(45, 10), 25)));
+                if (rand.NextDouble() < 0.01)
+                {
+                    scope.Span.SetTag(Tags.Error, true);
+                    return false;
+                }
+                return true;
+            }
         }
 
         private double RandomGauss(double mean, double stdDev)
