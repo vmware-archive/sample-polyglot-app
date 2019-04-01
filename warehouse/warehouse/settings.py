@@ -140,6 +140,8 @@ with open("applicationTags.yaml", "r") as stream:
         custom_tags=application_tags_yaml.get('customTags').items()
     )
 
+SOURCE = WF_REPORTING_CONFIG.get('source') or socket.gethostname()
+
 WF_REPORTER = None
 if WF_REPORTING_CONFIG and \
         WF_REPORTING_CONFIG.get('reportingMechanism') == 'direct':
@@ -147,10 +149,11 @@ if WF_REPORTING_CONFIG and \
         server=WF_REPORTING_CONFIG.get('server'),
         token=WF_REPORTING_CONFIG.get('token'),
         reporting_interval=5,
-        source=WF_REPORTING_CONFIG.get('source') or socket.gethostname()
+        source=SOURCE
     ).report_minute_distribution()
 
-SPAN_REPORTER = WavefrontSpanReporter(client=WF_REPORTER.wavefront_client)
+SPAN_REPORTER = WavefrontSpanReporter(client=WF_REPORTER.wavefront_client,
+                                      source=SOURCE)
 
 OPENTRACING_TRACING = DjangoTracing(WavefrontTracer(
     reporter=SPAN_REPORTER, application_tags=APPLICATION_TAGS))
