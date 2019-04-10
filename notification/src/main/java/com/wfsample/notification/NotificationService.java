@@ -60,7 +60,7 @@ public class NotificationService implements NotificationApi {
           startActive(true)) {
         try {
           Thread.sleep(200);
-          if (rand.nextInt(1000) == 500) {
+          if (rand.nextInt(100) == 50) {
             Tags.ERROR.set(asyncSpan.span(), true);
           }
         } catch (InterruptedException e) {
