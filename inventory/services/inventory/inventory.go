@@ -9,7 +9,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/opentracing/opentracing-go"
 	otrext "github.com/opentracing/opentracing-go/ext"
-
+	otrlog "github.com/opentracing/opentracing-go/log"
 	. "wavefront.com/polyglot/inventory/internal"
 )
 
@@ -39,6 +39,7 @@ func (s *InventoryService) available(w http.ResponseWriter, r *http.Request) {
 	defer span.Finish()
 
 	go async(span.Context())
+	span.LogFields(otrlog.String("event", "created async"))
 
 	RandSimDelay()
 
@@ -49,6 +50,7 @@ func (s *InventoryService) available(w http.ResponseWriter, r *http.Request) {
 
 	if !exists {
 		otrext.Error.Set(span, true)
+		span.LogFields(otrlog.String("error.kind", "item does not exist"))
 		WriteError(w, "Item does not exist", http.StatusNotFound)
 		return
 	}
@@ -65,6 +67,10 @@ func (s *InventoryService) checkout(w http.ResponseWriter, r *http.Request) {
 
 	if RAND.Float32() < GlobalConfig.SimFailCheckout {
 		otrext.Error.Set(span, true)
+		span.LogFields(
+			otrlog.String("error.kind", "failure"),
+			otrlog.String("message", "service unavailable"),
+		)
 		WriteError(w, "checkout failure", http.StatusServiceUnavailable)
 		return
 	}
