@@ -6,9 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.core.Response;
 
@@ -31,7 +31,7 @@ import io.opentracing.util.GlobalTracer;
  */
 @Service
 public class NotificationService implements NotificationApi {
-  private AtomicInteger notify = new AtomicInteger(0);
+  private Random rand = new Random();
 
   private final Tracer tracer;
 
@@ -60,7 +60,7 @@ public class NotificationService implements NotificationApi {
           startActive(true)) {
         try {
           Thread.sleep(200);
-          if (notify.incrementAndGet() % 10 == 0) {
+          if (rand.nextInt(100) == 50) {
             Tags.ERROR.set(asyncSpan.span(), true);
           }
         } catch (InterruptedException e) {
