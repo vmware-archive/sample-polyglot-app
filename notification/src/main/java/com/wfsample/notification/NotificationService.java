@@ -31,19 +31,19 @@ import io.opentracing.util.GlobalTracer;
  */
 @Service
 public class NotificationService implements NotificationApi {
-  private Random rand = new Random();
-
+  private final Random rand = new Random();
   private final Tracer tracer;
+  private final ExecutorService notificationExecutor;
 
   @Autowired
   public NotificationService() {
     this.tracer = GlobalTracer.get();
+    notificationExecutor = new TracedExecutorService(
+        Executors.newFixedThreadPool(2 * Runtime.getRuntime().availableProcessors()), tracer);
   }
 
   public Response notify(String trackNum) {
-    ExecutorService executorService = new TracedExecutorService(
-        Executors.newFixedThreadPool(1), tracer);
-    executorService.submit(new InternalNotifyService());
+    notificationExecutor.submit(new InternalNotifyService());
     try {
       Thread.sleep(10);
     } catch (InterruptedException e) {
