@@ -9,6 +9,11 @@ type InventoryConfig struct {
 	Server string
 	Token  string
 
+	ProxyHost string
+	ProxyPort int
+	ProxyDistributionsPort int
+	ProxyTracingPort int
+
 	Cluster string
 	Shard   string
 
@@ -32,6 +37,11 @@ func InitGlobalConfig() {
 
 		Server: "",
 		Token:  "",
+
+		ProxyHost: "",
+		ProxyPort: 2878,
+		ProxyDistributionsPort: 40000,
+		ProxyTracingPort: 30000,
 
 		Cluster: "us-west",
 		Shard:   "primary",
