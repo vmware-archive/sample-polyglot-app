@@ -21,6 +21,7 @@ from wavefront_sdk.common import ApplicationTags
 from wavefront_opentracing_sdk import reporting, WavefrontTracer
 from wavefront_django_sdk import DjangoTracing
 from wavefront_pyformance.wavefront_reporter import WavefrontDirectReporter
+from wavefront_pyformance.wavefront_reporter import WavefrontProxyReporter
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -148,6 +149,16 @@ if WF_REPORTING_CONFIG and \
     WF_REPORTER = WavefrontDirectReporter(
         server=WF_REPORTING_CONFIG.get('server'),
         token=WF_REPORTING_CONFIG.get('token'),
+        reporting_interval=5,
+        source=SOURCE
+    ).report_minute_distribution()
+elif WF_REPORTING_CONFIG and \
+        WF_REPORTING_CONFIG.get('reportingMechanism') == 'proxy':
+    WF_REPORTER = WavefrontProxyReporter(
+        host=WF_REPORTING_CONFIG.get('proxyHost'),
+        port=WF_REPORTING_CONFIG.get('proxyMetricsPort'),
+        distribution_port=WF_REPORTING_CONFIG.get('proxyDistributionsPort'),
+        tracing_port=WF_REPORTING_CONFIG.get('proxyTracingPort'),
         reporting_interval=5,
         source=SOURCE
     ).report_minute_distribution()
