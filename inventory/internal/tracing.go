@@ -17,19 +17,35 @@ import (
 )
 
 func NewGlobalTracer(serviceName string) io.Closer {
-	if GlobalConfig.Server == "" || GlobalConfig.Token == "" {
-		log.Fatal("missing server and token")
-	}
 
-	config := &senders.DirectConfiguration{
-		Server: GlobalConfig.Server,
-		Token:  GlobalConfig.Token,
-	}
-	sender, err := senders.NewDirectSender(config)
-	if err != nil {
-		log.Fatalf("error creating wavefront sender: %q", err)
-	}
+	var sender senders.Sender
 
+	if GlobalConfig.Server != "" && GlobalConfig.Token != "" {
+		config := &senders.DirectConfiguration {
+			Server: GlobalConfig.Server,
+			Token:  GlobalConfig.Token,
+		}
+
+		sender, err := senders.NewDirectSender(config)
+		if err != nil {
+			log.Fatalf("error creating wavefront sender: %q", err)
+		}
+	} else if GlobalConfig.ProxyHost != "" {
+		config := &senders.ProxyConfiguration {
+			Host: GlobalConfig.ProxyHost,
+			MetricsPort:  GlobalConfig.ProxyPort,
+			DistributionPort: GlobalConfig.ProxyDistributionsPort,
+			TracingPort: GlobalConfig.ProxyTracingPort,
+		}
+
+		sender, err := senders.NewProxySender(config)
+		if err != nil {
+			log.Fatalf("error creating wavefront sender: %q", err)
+		}
+	} else {
+		log.Fatalf("Not enough configuration parameter has been specified for sender.")
+	}
+	
 	appName := GlobalConfig.Application
 	if appName == "" {
 		appName = "beachshirts"
@@ -38,15 +54,15 @@ func NewGlobalTracer(serviceName string) io.Closer {
 	appTags.Cluster = GlobalConfig.Cluster
 	appTags.Shard = GlobalConfig.Shard
 
-	var directReporter reporter.WavefrontSpanReporter
+	var spanReporter reporter.WavefrontSpanReporter
 	if GlobalConfig.Source != "" {
-		directReporter = reporter.New(sender, appTags, reporter.Source(GlobalConfig.Source))
+		spanReporter = reporter.New(sender, appTags, reporter.Source(GlobalConfig.Source))
 	} else {
-		directReporter = reporter.New(sender, appTags)
+		spanReporter = reporter.New(sender, appTags)
 	}
 
 	consoleReporter := reporter.NewConsoleSpanReporter(serviceName)
-	compositeReporter := reporter.NewCompositeSpanReporter(directReporter, consoleReporter)
+	compositeReporter := reporter.NewCompositeSpanReporter(spanReporter, consoleReporter)
 	wavefrontTracer := wfTracer.New(compositeReporter)
 	opentracing.SetGlobalTracer(wavefrontTracer)
 	return ioutil.NopCloser(nil)
