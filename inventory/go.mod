@@ -13,8 +13,8 @@ require (
 	github.com/tuvistavie/securerandom v0.0.0-20140719024926-15512123a948 // indirect
 	github.com/uber/jaeger-client-go v2.15.0+incompatible
 	github.com/uber/jaeger-lib v1.5.0
-	github.com/wavefronthq/go-metrics-wavefront v0.9.1-0.20190204180122-5218246a44b3 // indirect
-	github.com/wavefronthq/wavefront-opentracing-sdk-go v0.0.0-20190415174418-0495a54ed660
+	github.com/wavefronthq/go-metrics-wavefront v0.9.1-0.20190523005342-a8ea12bf9968 // indirect
+	github.com/wavefronthq/wavefront-opentracing-sdk-go v0.0.0-20190528173349-76fced647a45
 	github.com/wavefronthq/wavefront-sdk-go v0.9.3-0.20190412230506-adcaf5425237
 	golang.org/x/net v0.0.0-20190125091013-d26f9f9a57f3 // indirect
 )
