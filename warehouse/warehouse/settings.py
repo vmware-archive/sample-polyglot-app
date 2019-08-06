@@ -19,7 +19,7 @@ from wavefront_opentracing_sdk.reporting import CompositeReporter, \
 from wavefront_pyformance.tagged_registry import TaggedRegistry
 from wavefront_sdk.common import ApplicationTags
 from wavefront_opentracing_sdk import reporting, WavefrontTracer
-from wavefront_django_sdk import DjangoTracing
+from wavefront_django_sdk.tracing import DjangoTracing
 from wavefront_pyformance.wavefront_reporter import WavefrontDirectReporter
 from wavefront_pyformance.wavefront_reporter import WavefrontProxyReporter
 

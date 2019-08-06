@@ -21,10 +21,12 @@ def fetch(request, order_num):
     if random.randint(1, 1000) == 1000:
         msg = "Random Service Unavailable!"
         logging.warning(msg)
+        tracer.active_span.log_kv({"Error": msg})
         return Response(msg, status=503)
     if not order_num:
         msg = "Invalid Order Num!"
         logging.warning(msg)
+        tracer.active_span.log_kv({"Error": msg})
         return Response(msg, status=400)
     executor.submit(async_fetch, tracer.active_span)
     if random.randint(1, 3) == 3:
@@ -41,6 +43,7 @@ def async_fetch(parent_span):
             time.sleep(2)
             if random.randint(1, 1000) == 1000:
                 scope.span.set_tag("error", "true")
+                scope.span.log_kv({"Error": "Fail to execute async_fetch"})
             return
 
 
