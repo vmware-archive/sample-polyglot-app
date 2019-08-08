@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,15 +39,15 @@ namespace Payments.Controllers
 
             if (string.IsNullOrWhiteSpace(orderNum))
             {
-                return BadRequest("invalid order number");
+                throw new ArgumentException($"invalid order number: {orderNum}");
             }
             else if (string.IsNullOrWhiteSpace(payment.Name))
             {
-                return BadRequest("invalid name");
+                throw new ArgumentException($"invalid name: {payment.Name}");
             }
-            else if (string.IsNullOrWhiteSpace(payment.CreditCardNum))
+            else if (string.IsNullOrWhiteSpace(payment.CreditCardNum) || rand.NextDouble() < 0.001)
             {
-                return BadRequest("invalid credit card number");
+                throw new ArgumentException($"invalid credit card number: {payment.CreditCardNum}");
             }
 
             var context = tracer.ActiveSpan.Context;
@@ -65,14 +66,21 @@ namespace Payments.Controllers
                     .AddReference(References.ChildOf, context)
                     .StartActive())
             {
-                Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(80, 20), 40)));
-                if (rand.NextDouble() < 0.001)
+                try
                 {
-                    scope.Span.SetTag(Tags.Error, true);
+                    Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(80, 20), 40)));
+                    if (rand.NextDouble() < 0.001)
+                    {
+                        throw new OutOfMemoryException("fast pay failed");
+                    }
+                    return Accepted("fast pay accepted");
+                }
+                catch (Exception e)
+                {
+                    LogException(e);
                     return StatusCode(StatusCodes.Status500InternalServerError, "fast pay failed");
                 }
-                return Accepted("fast pay accepted");
-            };
+            }
         }
 
         private IActionResult ProcessPayment(ISpanContext context)
@@ -81,20 +89,27 @@ namespace Payments.Controllers
                     .AddReference(References.ChildOf, context)
                     .StartActive())
             {
-                Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(25, 5), 15)));
-                if (rand.NextDouble() < 0.001)
+                try
                 {
-                    scope.Span.SetTag(Tags.Error, true);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "payment failed");
+                    Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(25, 5), 15)));
+                    if (rand.NextDouble() < 0.001)
+                    {
+                        throw new OutOfMemoryException("payment processing failed");
+                    }
+                    if (!AuthorizePayment(scope.Span.Context))
+                    {
+                        scope.Span.SetTag(Tags.Error, true);
+                        return StatusCode(StatusCodes.Status500InternalServerError, "payment authorization failed");
+                    }
+                    Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(15, 3), 10)));
+                    return FinishPayment(scope.Span.Context);
                 }
-
-                if (!AuthorizePayment(scope.Span.Context))
+                catch (Exception e)
                 {
-                    return StatusCode(StatusCodes.Status500InternalServerError, "payment authorization failed");
+                    LogException(e);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "payment processing failed");
                 }
-                Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(15, 3), 10)));
-                return FinishPayment(scope.Span.Context);
-            };
+            }
         }
 
         private bool AuthorizePayment(ISpanContext context)
@@ -103,14 +118,22 @@ namespace Payments.Controllers
                     .AddReference(References.ChildOf, context)
                     .StartActive())
             {
-                Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(100, 25), 50)));
-                if (rand.NextDouble() < 0.001)
+                try
                 {
-                    scope.Span.SetTag(Tags.Error, true);
+                    Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(100, 25), 50)));
+                    if (rand.NextDouble() < 0.001)
+                    {
+                        Thread.Sleep(TimeSpan.FromMilliseconds(1000));
+                        throw new TimeoutException("payment authorization timed out");
+                    }
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    LogException(e);
                     return false;
                 }
-                return true;
-            };
+            }
         }
 
         private IActionResult FinishPayment(ISpanContext context)
@@ -119,14 +142,22 @@ namespace Payments.Controllers
                     .AddReference(References.ChildOf, context)
                     .StartActive())
             {
-                Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(60, 15), 30)));
-                if (rand.NextDouble() < 0.001)
+                try
                 {
-                    scope.Span.SetTag(Tags.Error, true);
-                    return StatusCode(StatusCodes.Status500InternalServerError, "payment failed");
+                    Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(60, 15), 30)));
+                    if (rand.NextDouble() < 0.001)
+                    {
+                        Thread.Sleep(TimeSpan.FromMilliseconds(1000));
+                        throw new TimeoutException("final payment post-processing timed out");
+                    }
+                    return Accepted("payment accepted");
                 }
-                return Accepted("payment accepted");
-            };
+                catch (Exception e)
+                {
+                    LogException(e);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "finish payment failed");
+                }
+            }
         }
 
         private async Task UpdateAccountAsync(ISpanContext context)
@@ -135,13 +166,20 @@ namespace Payments.Controllers
                     .AddReference(References.FollowsFrom, context)
                     .StartActive())
             {
-                double randDuration = rand.NextDouble() / 3;
-                await Task.Delay(TimeSpan.FromSeconds(1 + randDuration));
-                if (rand.NextDouble() < 0.001)
+                try
                 {
-                    scope.Span.SetTag(Tags.Error, true);
+                    double randDuration = rand.NextDouble() / 3;
+                    await Task.Delay(TimeSpan.FromSeconds(1 + randDuration));
+                    if (rand.NextDouble() < 0.001)
+                    {
+                        throw new InsufficientMemoryException("account update failed");
+                    }
                 }
-            };
+                catch (Exception e)
+                {
+                    LogException(e);
+                }
+            }
         }
 
         // GET health
@@ -153,8 +191,16 @@ namespace Payments.Controllers
             var context = tracer.ActiveSpan.Context;
             if (await CheckHealthAsync(context))
             {
+                tracer.ActiveSpan.Log(new Dictionary<string, object>
+                {
+                    { "status", "healthy" }
+                });
                 return Ok("healthy");
             }
+            tracer.ActiveSpan.Log(new Dictionary<string, object>
+            {
+                { "status", "unavailable" }
+            });
             return StatusCode(StatusCodes.Status503ServiceUnavailable, "unavailable");
         }
 
@@ -173,6 +219,7 @@ namespace Payments.Controllers
                     if (!healthy)
                     {
                         scope.Span.SetTag(Tags.Error, true);
+                        scope.Span.Log("failed health check");
                         return false;
                     }
                 }
@@ -187,9 +234,10 @@ namespace Payments.Controllers
                     .StartActive())
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(50, 10), 30)));
-                if (rand.NextDouble() < 0.01)
+                if (rand.NextDouble() < 0.001)
                 {
                     scope.Span.SetTag(Tags.Error, true);
+                    scope.Span.Log("database service unhealthy");
                     return false;
                 }
                 return true;
@@ -203,9 +251,10 @@ namespace Payments.Controllers
                     .StartActive())
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(45, 10), 25)));
-                if (rand.NextDouble() < 0.01)
+                if (rand.NextDouble() < 0.001)
                 {
                     scope.Span.SetTag(Tags.Error, true);
+                    scope.Span.Log("authentication service unhealthy");
                     return false;
                 }
                 return true;
@@ -221,6 +270,22 @@ namespace Payments.Controllers
             double randNormal =
                          mean + stdDev * randStdNormal;
             return randNormal;
+        }
+
+        private void LogException(Exception exception)
+        {
+            var span = tracer.ActiveSpan;
+            if (span == null)
+            {
+                return;
+            }
+            span.SetTag(Tags.Error, true);
+            span.Log(new Dictionary<string, object>(3)
+            {
+                { LogFields.Event, Tags.Error.Key },
+                { LogFields.ErrorKind, exception.GetType().Name },
+                { LogFields.ErrorObject, exception }
+            });
         }
     }
 }
