@@ -234,7 +234,7 @@ namespace Payments.Controllers
                     .StartActive())
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(50, 10), 30)));
-                if (rand.NextDouble() < 0.001)
+                if (rand.NextDouble() < 0.01)
                 {
                     scope.Span.SetTag(Tags.Error, true);
                     scope.Span.Log("database service unhealthy");
@@ -251,7 +251,7 @@ namespace Payments.Controllers
                     .StartActive())
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(45, 10), 25)));
-                if (rand.NextDouble() < 0.001)
+                if (rand.NextDouble() < 0.01)
                 {
                     scope.Span.SetTag(Tags.Error, true);
                     scope.Span.Log("authentication service unhealthy");
