@@ -13,6 +13,8 @@ import javax.ws.rs.container.DynamicFeature;
 
 import io.opentracing.Tracer;
 
+import java.util.Collections;
+
 import static com.wavefront.config.ReportingUtils.constructApplicationTags;
 import static com.wavefront.config.ReportingUtils.constructWavefrontReportingConfig;
 
@@ -35,7 +37,8 @@ public class NotificationApplication {
         constructApplicationTags(env.getProperty("applicationTagsYamlFile"));
     WavefrontReportingConfig wfReportingConfig =
         constructWavefrontReportingConfig(env.getProperty("wfReportingConfigYamlFile"));
-    return new WavefrontJaxrsDynamicFeature(applicationTags, wfReportingConfig);
+    return new WavefrontJaxrsDynamicFeature(applicationTags, wfReportingConfig,
+        Collections.emptySet());
   }
 
 }

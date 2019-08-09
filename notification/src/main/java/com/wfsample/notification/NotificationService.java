@@ -1,28 +1,21 @@
 package com.wfsample.notification;
 
+import com.google.common.collect.ImmutableMap;
 import com.wfsample.service.NotificationApi;
-
+import io.opentracing.Scope;
+import io.opentracing.Tracer;
+import io.opentracing.contrib.concurrent.TracedExecutorService;
+import io.opentracing.log.Fields;
+import io.opentracing.tag.Tags;
+import io.opentracing.util.GlobalTracer;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
+import javax.ws.rs.core.Response;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import javax.ws.rs.core.Response;
-
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.SpanContext;
-import io.opentracing.Tracer;
-import io.opentracing.contrib.concurrent.TracedExecutorService;
-import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMap;
-import io.opentracing.propagation.TextMapExtractAdapter;
-import io.opentracing.propagation.TextMapInjectAdapter;
-import io.opentracing.tag.Tags;
-import io.opentracing.util.GlobalTracer;
 
 /**
  * Implementation of Notification Service.
@@ -61,10 +54,17 @@ public class NotificationService implements NotificationApi {
         try {
           Thread.sleep(200);
           if (rand.nextInt(100) == 50) {
-            Tags.ERROR.set(asyncSpan.span(), true);
+            throw new NullPointerException();
           }
         } catch (InterruptedException e) {
           e.printStackTrace();
+        } catch (Exception e) {
+          Tags.ERROR.set(asyncSpan.span(), true);
+          asyncSpan.span().log(ImmutableMap.of(
+              Fields.EVENT, "error",
+              Fields.ERROR_KIND, e.getClass().getName(),
+              Fields.STACK, ExceptionUtils.getStackTrace(e)
+          ));
         }
       }
     }

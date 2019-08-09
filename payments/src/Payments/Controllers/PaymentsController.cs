@@ -71,7 +71,7 @@ namespace Payments.Controllers
                     Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(80, 20), 40)));
                     if (rand.NextDouble() < 0.001)
                     {
-                        throw new OutOfMemoryException("fast pay failed");
+                        throw new NullReferenceException();
                     }
                     return Accepted("fast pay accepted");
                 }
@@ -94,7 +94,7 @@ namespace Payments.Controllers
                     Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(25, 5), 15)));
                     if (rand.NextDouble() < 0.001)
                     {
-                        throw new OutOfMemoryException("payment processing failed");
+                        throw new OutOfMemoryException();
                     }
                     if (!AuthorizePayment(scope.Span.Context))
                     {
@@ -124,7 +124,7 @@ namespace Payments.Controllers
                     if (rand.NextDouble() < 0.001)
                     {
                         Thread.Sleep(TimeSpan.FromMilliseconds(1000));
-                        throw new TimeoutException("payment authorization timed out");
+                        throw new TimeoutException();
                     }
                     return true;
                 }
@@ -148,7 +148,7 @@ namespace Payments.Controllers
                     if (rand.NextDouble() < 0.001)
                     {
                         Thread.Sleep(TimeSpan.FromMilliseconds(1000));
-                        throw new TimeoutException("final payment post-processing timed out");
+                        throw new TimeoutException();
                     }
                     return Accepted("payment accepted");
                 }
@@ -172,7 +172,7 @@ namespace Payments.Controllers
                     await Task.Delay(TimeSpan.FromSeconds(1 + randDuration));
                     if (rand.NextDouble() < 0.001)
                     {
-                        throw new InsufficientMemoryException("account update failed");
+                        throw new OutOfMemoryException();
                     }
                 }
                 catch (Exception e)
@@ -193,13 +193,13 @@ namespace Payments.Controllers
             {
                 tracer.ActiveSpan.Log(new Dictionary<string, object>
                 {
-                    { "status", "healthy" }
+                    { LogFields.Message, "Service is healthy" }
                 });
                 return Ok("healthy");
             }
             tracer.ActiveSpan.Log(new Dictionary<string, object>
             {
-                { "status", "unavailable" }
+                { LogFields.Message, "Service is unavailable" }
             });
             return StatusCode(StatusCodes.Status503ServiceUnavailable, "unavailable");
         }
@@ -219,7 +219,7 @@ namespace Payments.Controllers
                     if (!healthy)
                     {
                         scope.Span.SetTag(Tags.Error, true);
-                        scope.Span.Log("failed health check");
+                        scope.Span.Log("Health check failed");
                         return false;
                     }
                 }
@@ -237,7 +237,7 @@ namespace Payments.Controllers
                 if (rand.NextDouble() < 0.01)
                 {
                     scope.Span.SetTag(Tags.Error, true);
-                    scope.Span.Log("database service unhealthy");
+                    scope.Span.Log("Unable to connect to FoundationDB server on '127.0.0.1'");
                     return false;
                 }
                 return true;
@@ -254,7 +254,7 @@ namespace Payments.Controllers
                 if (rand.NextDouble() < 0.01)
                 {
                     scope.Span.SetTag(Tags.Error, true);
-                    scope.Span.Log("authentication service unhealthy");
+                    scope.Span.Log("Unable to connect to authentication server on '127.0.0.1'");
                     return false;
                 }
                 return true;
