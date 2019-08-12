@@ -19,33 +19,32 @@ import (
 func NewGlobalTracer(serviceName string) io.Closer {
 
 	var sender senders.Sender
+	var err error
 
 	if GlobalConfig.Server != "" && GlobalConfig.Token != "" {
-		config := &senders.DirectConfiguration {
+		config := &senders.DirectConfiguration{
 			Server: GlobalConfig.Server,
 			Token:  GlobalConfig.Token,
 		}
-
-		sender, err := senders.NewDirectSender(config)
+		sender, err = senders.NewDirectSender(config)
 		if err != nil {
 			log.Fatalf("error creating wavefront sender: %q", err)
 		}
 	} else if GlobalConfig.ProxyHost != "" {
-		config := &senders.ProxyConfiguration {
-			Host: GlobalConfig.ProxyHost,
-			MetricsPort:  GlobalConfig.ProxyPort,
+		config := &senders.ProxyConfiguration{
+			Host:             GlobalConfig.ProxyHost,
+			MetricsPort:      GlobalConfig.ProxyPort,
 			DistributionPort: GlobalConfig.ProxyDistributionsPort,
-			TracingPort: GlobalConfig.ProxyTracingPort,
+			TracingPort:      GlobalConfig.ProxyTracingPort,
 		}
-
-		sender, err := senders.NewProxySender(config)
+		sender, err = senders.NewProxySender(config)
 		if err != nil {
 			log.Fatalf("error creating wavefront sender: %q", err)
 		}
 	} else {
 		log.Fatalf("Not enough configuration parameter has been specified for sender.")
 	}
-	
+
 	appName := GlobalConfig.Application
 	if appName == "" {
 		appName = "beachshirts"
