@@ -44,11 +44,10 @@ def async_fetch(parent_span):
             try:
                 time.sleep(2)
                 if random.randint(1, 1000) == 1000:
-                    raise RuntimeError
+                    raise RuntimeError("Fail to execute async_fetch")
                 return
             except RuntimeError:
-                handle_exception(scope.span, sys.exc_info(),
-                                 "Fail to execute async_fetch")
+                handle_exception(scope.span, sys.exc_info())
 
 
 @api_view(http_method_names=["GET"])
@@ -73,7 +72,7 @@ def async_check(parent_span):
             return
 
 
-def handle_exception(active_span, exe_info, status_code):
+def handle_exception(active_span, exe_info, status_code=None):
     error_msg = str(exe_info[1])
     if error_msg:
         logging.warning(error_msg)
@@ -86,4 +85,7 @@ def handle_exception(active_span, exe_info, status_code):
                 '\n'.join(map(str.strip, traceback.format_tb(exe_info[2])))}
         print(error_log)
         active_span.log_kv(error_log)
-    return Response(error_msg, status=status_code)
+    if not status_code:
+        return
+    else:
+        return Response(error_msg, status=status_code)
