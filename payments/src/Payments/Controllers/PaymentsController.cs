@@ -45,7 +45,7 @@ namespace Payments.Controllers
             {
                 throw new ArgumentException($"invalid name: {payment.Name}");
             }
-            else if (string.IsNullOrWhiteSpace(payment.CreditCardNum) || rand.NextDouble() < 0.001)
+            else if (string.IsNullOrWhiteSpace(payment.CreditCardNum) || rand.NextDouble() < 0.01)
             {
                 throw new ArgumentException($"invalid credit card number: {payment.CreditCardNum}");
             }

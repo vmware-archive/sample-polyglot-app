@@ -21,7 +21,7 @@ public class JerseyConfig extends ResourceConfig {
   @Inject
   public JerseyConfig(WavefrontJerseyFactory wavefrontJerseyFactory) {
     register(wavefrontJerseyFactory.getWavefrontJerseyFilter());
-    register(new DeliveryController());
+    register(new DeliveryController(wavefrontJerseyFactory.getTracer()));
   }
 
 }
