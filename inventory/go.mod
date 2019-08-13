@@ -15,6 +15,6 @@ require (
 	github.com/uber/jaeger-lib v1.5.0
 	github.com/wavefronthq/go-metrics-wavefront v0.9.1-0.20190523005342-a8ea12bf9968 // indirect
 	github.com/wavefronthq/wavefront-opentracing-sdk-go v0.0.0-20190528173349-76fced647a45
-	github.com/wavefronthq/wavefront-sdk-go v0.9.3-0.20190412230506-adcaf5425237
+	github.com/wavefronthq/wavefront-sdk-go v0.9.3
 	golang.org/x/net v0.0.0-20190125091013-d26f9f9a57f3 // indirect
 )

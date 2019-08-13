@@ -85,5 +85,7 @@ github.com/wavefronthq/wavefront-sdk-go v0.9.3-0.20190412213137-51fd6ad868b1 h1:
 github.com/wavefronthq/wavefront-sdk-go v0.9.3-0.20190412213137-51fd6ad868b1/go.mod h1:hQI6y8M9OtTCtc0xdwh+dCER4osxXdEAeCpacjpDZEU=
 github.com/wavefronthq/wavefront-sdk-go v0.9.3-0.20190412230506-adcaf5425237 h1:YLVfLH+NNq1qzYZymNWaXVIyjVffb+UOVkKU7xt5nAk=
 github.com/wavefronthq/wavefront-sdk-go v0.9.3-0.20190412230506-adcaf5425237/go.mod h1:hQI6y8M9OtTCtc0xdwh+dCER4osxXdEAeCpacjpDZEU=
+github.com/wavefronthq/wavefront-sdk-go v0.9.3 h1:UW6XfPOpW4+JxPQcETnTNSV9eDf0do97owL7bMiDc/Y=
+github.com/wavefronthq/wavefront-sdk-go v0.9.3/go.mod h1:hQI6y8M9OtTCtc0xdwh+dCER4osxXdEAeCpacjpDZEU=
 golang.org/x/net v0.0.0-20190125091013-d26f9f9a57f3 h1:ulvT7fqt0yHWzpJwI57MezWnYDVpCAYBVuYst/L+fAY=
 golang.org/x/net v0.0.0-20190125091013-d26f9f9a57f3/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
