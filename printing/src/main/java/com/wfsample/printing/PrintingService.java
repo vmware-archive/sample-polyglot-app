@@ -78,8 +78,6 @@ public class PrintingService {
     private final AtomicInteger restock = new AtomicInteger(0);
     private final AtomicInteger available = new AtomicInteger(0);
 
-
-
     public PrintingImpl(GrpcServiceConfig grpcServiceConfig) {
       this.conf = grpcServiceConfig;
     }
@@ -141,7 +139,7 @@ public class PrintingService {
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
-      if (restock.incrementAndGet() % 40 == 0) {
+      if (available.incrementAndGet() % 40 == 0) {
         // not enough ink to print shirts
         responseObserver.onError(Status.CANCELLED.asRuntimeException());
       }

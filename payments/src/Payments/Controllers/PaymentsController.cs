@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -17,11 +19,14 @@ namespace Payments.Controllers
         private readonly Random rand = new Random();
         private readonly ITracer tracer;
         private readonly HttpClient httpClient;
+        private readonly ConcurrentDictionary<string, StrongBox<int>> internalCounters;
 
-        public PaymentsController(ITracer tracer)
+        public PaymentsController(ITracer tracer, ConcurrentDictionary<string, StrongBox<int>> internalCounters)
         {
             this.tracer = tracer;
             this.httpClient = new HttpClient();
+            this.internalCounters = internalCounters;
+            this.internalCounters.GetOrAdd("authorize", new StrongBox<int>());
         }
 
         // POST pay
@@ -77,7 +82,7 @@ namespace Payments.Controllers
                 }
                 catch (Exception e)
                 {
-                    LogException(e);
+                    LogException(e, null);
                     return StatusCode(StatusCodes.Status500InternalServerError, "fast pay failed");
                 }
             }
@@ -106,7 +111,7 @@ namespace Payments.Controllers
                 }
                 catch (Exception e)
                 {
-                    LogException(e);
+                    LogException(e, null);
                     return StatusCode(StatusCodes.Status500InternalServerError, "payment processing failed");
                 }
             }
@@ -121,16 +126,16 @@ namespace Payments.Controllers
                 try
                 {
                     Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(100, 25), 50)));
-                    if (rand.NextDouble() < 0.001)
+                    if (Interlocked.Increment(ref internalCounters["authorize"].Value) % 5 == 0)
                     {
-                        Thread.Sleep(TimeSpan.FromMilliseconds(1000));
+                        Thread.Sleep(TimeSpan.FromMilliseconds(5000));
                         throw new TimeoutException();
                     }
                     return true;
                 }
                 catch (Exception e)
                 {
-                    LogException(e);
+                    LogException(e, "payment authorization timed out, please retry");
                     return false;
                 }
             }
@@ -154,7 +159,7 @@ namespace Payments.Controllers
                 }
                 catch (Exception e)
                 {
-                    LogException(e);
+                    LogException(e, null);
                     return StatusCode(StatusCodes.Status500InternalServerError, "finish payment failed");
                 }
             }
@@ -177,7 +182,7 @@ namespace Payments.Controllers
                 }
                 catch (Exception e)
                 {
-                    LogException(e);
+                    LogException(e, null);
                 }
             }
         }
@@ -272,20 +277,26 @@ namespace Payments.Controllers
             return randNormal;
         }
 
-        private void LogException(Exception exception)
+        private void LogException(Exception exception, string message)
         {
             var span = tracer.ActiveSpan;
             if (span == null)
             {
                 return;
             }
+
             span.SetTag(Tags.Error, true);
-            span.Log(new Dictionary<string, object>(3)
+            var fields = new Dictionary<string, object>
             {
                 { LogFields.Event, Tags.Error.Key },
                 { LogFields.ErrorKind, exception.GetType().Name },
                 { LogFields.ErrorObject, exception }
-            });
+            };
+            if (!string.IsNullOrEmpty(message))
+            {
+                fields.Add(LogFields.Message, message);
+            }
+            span.Log(fields);
         }
     }
 }
