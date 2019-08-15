@@ -128,7 +128,7 @@ namespace Payments.Controllers
                     Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(100, 25), 50)));
                     if (Interlocked.Increment(ref internalCounters["authorize"].Value) % 5 == 0)
                     {
-                        Thread.Sleep(TimeSpan.FromMilliseconds(5000));
+                        Thread.Sleep(TimeSpan.FromMilliseconds(15000));
                         throw new TimeoutException();
                     }
                     return true;
