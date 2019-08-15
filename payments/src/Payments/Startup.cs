@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using OpenTracing;
 using Wavefront.AspNetCore.SDK.CSharp.Common;
 using Wavefront.OpenTracing.SDK.CSharp;
@@ -37,6 +39,9 @@ namespace Payments
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             ConfigureWavefront(services);
+
+            // register internal counters
+            services.TryAddSingleton(new ConcurrentDictionary<string, StrongBox<int>>());
         }
 
         private void ConfigureWavefront(IServiceCollection services)

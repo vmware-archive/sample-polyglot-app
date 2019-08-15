@@ -13,9 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.ws.rs.core.Response;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Implementation of Notification Service.
@@ -24,9 +24,9 @@ import java.util.concurrent.Executors;
  */
 @Service
 public class NotificationService implements NotificationApi {
-  private final Random rand = new Random();
   private final Tracer tracer;
   private final ExecutorService notificationExecutor;
+  private final AtomicInteger counter = new AtomicInteger(0);
 
   @Autowired
   public NotificationService() {
@@ -46,14 +46,13 @@ public class NotificationService implements NotificationApi {
   }
 
   class InternalNotifyService implements Runnable {
-
     @Override
     public void run() {
       try (Scope asyncSpan = tracer.buildSpan("asyncNotify").
           startActive(true)) {
         try {
           Thread.sleep(200);
-          if (rand.nextInt(100) == 50) {
+          if (counter.incrementAndGet() % 100 == 0) {
             throw new NullPointerException();
           }
         } catch (InterruptedException e) {
