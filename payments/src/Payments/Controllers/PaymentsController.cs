@@ -134,33 +134,33 @@ namespace Payments.Controllers
                     switch (hour % 6)
                     {
                         case 0:
-                            // 10% errors
-                            timeout = count % 20 < 2;
+                            // 15% errors
+                            timeout = count % 20 < 3;
                             timeoutMillis = 8000;
                             break;
                         case 1:
-                            // 15% errors
-                            timeout = count % 20 < 3;
+                            // 20% errors
+                            timeout = count % 20 < 4;
                             timeoutMillis = 10000;
                             break;
                         case 2:
-                            // 20% errors
-                            timeout = count % 20 < 4;
+                            // 30% errors
+                            timeout = count % 20 < 6;
                             timeoutMillis = 14000;
                             break;
                         case 3:
-                            // 30% errors
-                            timeout = count % 20 < 6;
+                            // 40% errors
+                            timeout = count % 20 < 8;
                             timeoutMillis = 20000;
                             break;
                         case 4:
-                            // 25% errors
-                            timeout = count % 20 < 5;
+                            // 35% errors
+                            timeout = count % 20 < 7;
                             timeoutMillis = 16000;
                             break;
                         default:
-                            // 15% errors
-                            timeout = count % 20 < 3;
+                            // 20% errors
+                            timeout = count % 20 < 4;
                             timeoutMillis = 10000;
                             break;
                     }
