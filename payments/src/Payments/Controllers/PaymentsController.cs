@@ -125,7 +125,7 @@ namespace Payments.Controllers
             {
                 try
                 {
-                    int hour = DateTime.Now.Hour;
+                    int hour = DateTime.UtcNow.Hour;
                     Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(100, 25), 50)));
                     int count = Interlocked.Increment(ref internalCounters["authorize"].Value);
                     bool timeout;
