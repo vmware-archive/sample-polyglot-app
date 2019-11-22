@@ -173,7 +173,7 @@ public class ShirtOrderGenerator {
       try {
         RequestBody json3 = RequestBody.create(JSON, "{}");
         Request.Builder requestBuilder = new Request.Builder().url
-            ("http://" + host + ":" + stylingPort + "/style/" + i + "/delete").post(json3);
+            ("http://" + host + ":" + stylingPort + "/style/9/delete").post(json3);
         Request request = requestBuilder.build();
         Response response = client.newCall(request).execute();
         if (response.code() != 200) {
