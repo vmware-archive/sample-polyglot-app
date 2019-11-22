@@ -107,7 +107,7 @@ public class PrintingService {
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
-      if (addcolor.incrementAndGet() % 20 == 0) {
+      if (addcolor.incrementAndGet() % 15 == 0) {
         // not enough ink to print shirts
         responseObserver.onError(Status.INTERNAL.asRuntimeException());
       }
@@ -139,7 +139,7 @@ public class PrintingService {
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
-      if (available.incrementAndGet() % 40 == 0) {
+      if (available.incrementAndGet() % 30 == 0) {
         // not enough ink to print shirts
         responseObserver.onError(Status.CANCELLED.asRuntimeException());
       }

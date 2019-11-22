@@ -56,7 +56,7 @@ namespace Payments.Controllers
             }
 
             var context = tracer.ActiveSpan.Context;
-            IActionResult result = rand.NextDouble() < 0.5 ? FastPay(context) : ProcessPayment(context);
+            IActionResult result = rand.NextDouble() < 0 ? FastPay(context) : ProcessPayment(context);
             Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(20, 5), 10)));
 
             Task.Run(async () => await UpdateAccountAsync(context));
@@ -125,10 +125,49 @@ namespace Payments.Controllers
             {
                 try
                 {
+                    int hour = DateTime.Now.Hour;
                     Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(100, 25), 50)));
-                    if (Interlocked.Increment(ref internalCounters["authorize"].Value) % 5 == 0)
+                    int count = Interlocked.Increment(ref internalCounters["authorize"].Value);
+                    bool timeout;
+                    int timeoutMillis;
+                    // 6-hour cycles with spikes every 20 calls
+                    switch (hour % 6)
                     {
-                        Thread.Sleep(TimeSpan.FromMilliseconds(15000));
+                        case 0:
+                            // 10% errors
+                            timeout = count % 20 < 2;
+                            timeoutMillis = 8000;
+                            break;
+                        case 1:
+                            // 15% errors
+                            timeout = count % 20 < 3;
+                            timeoutMillis = 10000;
+                            break;
+                        case 2:
+                            // 20% errors
+                            timeout = count % 20 < 4;
+                            timeoutMillis = 14000;
+                            break;
+                        case 3:
+                            // 30% errors
+                            timeout = count % 20 < 6;
+                            timeoutMillis = 20000;
+                            break;
+                        case 4:
+                            // 25% errors
+                            timeout = count % 20 < 5;
+                            timeoutMillis = 16000;
+                            break;
+                        default:
+                            // 15% errors
+                            timeout = count % 20 < 3;
+                            timeoutMillis = 10000;
+                            break;
+                    }
+
+                    if (timeout)
+                    {
+                        Thread.Sleep(TimeSpan.FromMilliseconds(timeoutMillis));
                         throw new TimeoutException();
                     }
                     return true;

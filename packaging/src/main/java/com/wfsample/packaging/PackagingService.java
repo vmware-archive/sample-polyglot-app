@@ -136,7 +136,7 @@ public class PackagingService {
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
-      if (restock.incrementAndGet() % 20 == 0) {
+      if (restock.incrementAndGet() % 15 == 0) {
         responseObserver.onError(Status.INTERNAL.asRuntimeException());
       } else {
         responseObserver.onNext(com.wfsample.beachshirts.Status.newBuilder().
@@ -152,7 +152,7 @@ public class PackagingService {
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
-      if (getTypes.incrementAndGet() % 30 == 0) {
+      if (getTypes.incrementAndGet() % 15 == 0) {
         responseObserver.onError(Status.INTERNAL.asRuntimeException());
       } else {
         responseObserver.onNext(WrappingTypes.newBuilder().addWrappingType(WrappingType.

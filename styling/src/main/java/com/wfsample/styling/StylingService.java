@@ -18,6 +18,7 @@ import com.wfsample.common.DropwizardServiceConfig;
 import com.wfsample.common.dto.PackedShirtsDTO;
 import com.wfsample.common.dto.ShirtStyleDTO;
 import com.wfsample.service.InventoryApi;
+import com.wfsample.service.ShoppingApi;
 import com.wfsample.service.StylingApi;
 
 import java.util.ArrayList;
@@ -52,6 +53,8 @@ public class StylingService extends Application<DropwizardServiceConfig> {
     this.configuration = configuration;
     String inventoryUrl = "http://" + configuration.getInventoryHost() + ":" +
         configuration.getInventoryPort();
+    String shoppingUrl = "http://" + configuration.getShoppingHost() + ":" +
+        configuration.getShoppingPort();
     WavefrontJerseyFactory factory = new WavefrontJerseyFactory(
         configuration.getApplicationTagsYamlFile(), configuration.getWfReportingConfigYamlFile());
     WavefrontDropwizardReporter dropwizardReporter = new WavefrontDropwizardReporter.Builder(
@@ -72,19 +75,23 @@ public class StylingService extends Application<DropwizardServiceConfig> {
     environment.jersey().register(factory.getWavefrontJerseyFilter());
     environment.jersey().register(new StylingWebResource(
         BeachShirtsUtils.createProxyClient(inventoryUrl, InventoryApi.class,
-        factory.getWavefrontJaxrsClientFilter()),interceptor));
+            factory.getWavefrontJaxrsClientFilter()),
+        BeachShirtsUtils.createProxyClient(shoppingUrl, ShoppingApi.class,
+            factory.getWavefrontJaxrsClientFilter()), interceptor));
   }
 
   public class StylingWebResource implements StylingApi {
     private final PrintingGrpc.PrintingBlockingStub printing;
     private final PackagingGrpc.PackagingBlockingStub packaging;
     private final InventoryApi inventoryApi;
+    private final ShoppingApi shoppingApi;
     // sample set of static styles.
     private List<ShirtStyleDTO> shirtStyleDTOS = new ArrayList<>();
 
-    public StylingWebResource(InventoryApi inventoryApi,
+    public StylingWebResource(InventoryApi inventoryApi, ShoppingApi shoppingApi,
                               WavefrontClientInterceptor clientInterceptor) {
       this.inventoryApi = inventoryApi;
+      this.shoppingApi = shoppingApi;
       ShirtStyleDTO dto = new ShirtStyleDTO();
       dto.setName("style1");
       dto.setImageUrl("style1Image");
@@ -162,6 +169,17 @@ public class StylingService extends Application<DropwizardServiceConfig> {
         printing.restockColor(Color.newBuilder().setColor("rgb").build());
         Thread.sleep(10);
         packaging.restockMaterial(WrappingType.newBuilder().setWrappingType("wrap").build());
+        return Response.ok().build();
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    @Override
+    public Response deleteStyle(String id) {
+      try {
+        Thread.sleep(10);
+        shoppingApi.removeFromMenu(id);
         return Response.ok().build();
       } catch (Exception e) {
         throw new RuntimeException(e);

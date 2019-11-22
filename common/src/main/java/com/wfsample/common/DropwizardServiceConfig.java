@@ -15,6 +15,12 @@ public class DropwizardServiceConfig extends Configuration {
    * Port on which the styling service is running.
    */
   @JsonProperty
+  private int shoppingPort = 50050;
+
+  /**
+   * Port on which the styling service is running.
+   */
+  @JsonProperty
   private int stylingPort = 50051;
 
   /**
@@ -46,6 +52,12 @@ public class DropwizardServiceConfig extends Configuration {
    */
   @JsonProperty
   private int inventoryPort = 50061;
+
+  /**
+   * Host on which the shopping service is running.
+   */
+  @JsonProperty
+  private String shoppingHost = "shoppingService";
 
   /**
    * Host on which the styling service is running.
@@ -95,6 +107,10 @@ public class DropwizardServiceConfig extends Configuration {
   @JsonProperty
   private String wfReportingConfigYamlFile;
 
+  public int getShoppingPort() {
+    return shoppingPort;
+  }
+
   public int getStylingPort() {
     return stylingPort;
   }
@@ -117,6 +133,10 @@ public class DropwizardServiceConfig extends Configuration {
 
   public int getInventoryPort() {
     return inventoryPort;
+  }
+
+  public String getShoppingHost() {
+    return shoppingHost;
   }
 
   public String getStylingHost() {

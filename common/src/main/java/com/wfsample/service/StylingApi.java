@@ -39,4 +39,8 @@ public interface StylingApi {
   @POST
   @Path("{id}/update")
   Response restockStyle(@PathParam("id") String id);
+
+  @POST
+  @Path("{id}/delete")
+  Response deleteStyle(@PathParam("id") String id);
 }

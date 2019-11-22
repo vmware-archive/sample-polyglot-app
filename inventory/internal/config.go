@@ -48,8 +48,8 @@ func InitGlobalConfig() {
 
 		Source: "",
 
-		SimFailCheckout:  0.02,
-		SimFailAvailable: 0.03,
+		SimFailCheckout:  0.04,
+		SimFailAvailable: 0.06,
 		SimDelayChance:   0.3333,
 		SimDelayMS:       1000,
 	}
