@@ -9,6 +9,7 @@ import io.opentracing.log.Fields;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,25 @@ public class NotificationService implements NotificationApi {
   }
 
   public Response notify(String trackNum) {
+    try (Scope awsClientSnsSpan = tracer.buildSpan("notifySNS").
+            withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT).withTag(Tags.COMPONENT.getKey(), "java-aws-sdk").
+            withTag(Tags.PEER_SERVICE.getKey(), "AmazonSNS").startActive(true)) {
+      try {
+        Thread.sleep(50);
+        if (counter.incrementAndGet() % 500 == 0) {
+          throw new ConnectTimeoutException();
+        }
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      } catch (Exception e) {
+        Tags.ERROR.set(awsClientSnsSpan.span(), true);
+        awsClientSnsSpan.span().log(ImmutableMap.of(
+                Fields.EVENT, "error",
+                Fields.ERROR_KIND, e.getClass().getName(),
+                Fields.STACK, ExceptionUtils.getStackTrace(e)
+        ));
+      }
+    }
     notificationExecutor.submit(new InternalNotifyService());
     try {
       Thread.sleep(10);
