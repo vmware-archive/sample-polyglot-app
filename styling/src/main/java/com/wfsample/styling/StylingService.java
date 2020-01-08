@@ -23,6 +23,7 @@ import com.wfsample.service.StylingApi;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.core.Response;
 
@@ -30,6 +31,9 @@ import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.opentracing.Scope;
+import io.opentracing.Tracer;
+import io.opentracing.tag.Tags;
 
 /**
  * Driver for styling service which manages different styles of shirts and takes orders for a shirts
@@ -72,19 +76,23 @@ public class StylingService extends Application<DropwizardServiceConfig> {
     environment.jersey().register(factory.getWavefrontJerseyFilter());
     environment.jersey().register(new StylingWebResource(
         BeachShirtsUtils.createProxyClient(inventoryUrl, InventoryApi.class,
-        factory.getWavefrontJaxrsClientFilter()),interceptor));
+            factory.getWavefrontJaxrsClientFilter()), factory.getTracer(), interceptor));
   }
 
   public class StylingWebResource implements StylingApi {
     private final PrintingGrpc.PrintingBlockingStub printing;
     private final PackagingGrpc.PackagingBlockingStub packaging;
     private final InventoryApi inventoryApi;
+    private final Tracer tracer;
+    private final AtomicInteger counter = new AtomicInteger(0);
     // sample set of static styles.
     private List<ShirtStyleDTO> shirtStyleDTOS = new ArrayList<>();
 
     public StylingWebResource(InventoryApi inventoryApi,
+                              Tracer tracer,
                               WavefrontClientInterceptor clientInterceptor) {
       this.inventoryApi = inventoryApi;
+      this.tracer = tracer;
       ShirtStyleDTO dto = new ShirtStyleDTO();
       dto.setName("style1");
       dto.setImageUrl("style1Image");
@@ -119,8 +127,24 @@ public class StylingService extends Application<DropwizardServiceConfig> {
     }
 
     public PackedShirtsDTO makeShirts(String id, int quantity) {
+      // create the record in database.
+      try (Scope jdbcSpan = tracer.buildSpan("createRecord").
+          withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT).
+          withTag(Tags.COMPONENT.getKey(), "java-jdbc").
+          withTag(Tags.DB_INSTANCE.getKey(), "stylingDB").
+          withTag(Tags.DB_TYPE.getKey(), "postgresql").
+          startActive(true)) {
+        try {
+          Thread.sleep(20);
+          if (counter.incrementAndGet() % 110 == 0) {
+            throw new RuntimeException();
+          }
+        } catch (Exception e) {
+          Tags.ERROR.set(jdbcSpan.span(), true);
+          throw new RuntimeException(e);
+        }
+      }
       try {
-        Thread.sleep(20);
         Response checkoutResponse = inventoryApi.checkout(id);
         if (checkoutResponse.getStatus() >= 400) {
           throw new RuntimeException("unable to checkout resources from inventory");
