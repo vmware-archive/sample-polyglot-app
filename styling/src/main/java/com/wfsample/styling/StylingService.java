@@ -132,7 +132,7 @@ public class StylingService extends Application<DropwizardServiceConfig> {
           withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT).
           withTag(Tags.COMPONENT.getKey(), "java-jdbc").
           withTag(Tags.DB_INSTANCE.getKey(), "stylingDB").
-          withTag(Tags.DB_TYPE.getKey(), "postgres").
+          withTag(Tags.DB_TYPE.getKey(), "postgresql").
           startActive(true)) {
         try {
           Thread.sleep(20);
