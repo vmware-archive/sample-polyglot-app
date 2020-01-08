@@ -59,7 +59,9 @@ namespace Payments.Controllers
             IActionResult result = rand.NextDouble() < 0.5 ? FastPay(context) : ProcessPayment(context);
             Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(20, 5), 10)));
 
-            Task.Run(async () => await UpdateAccountAsync(context));
+            var dbTask = SavePaymentAsync(context);
+            var updateTask = UpdateAccountAsync(context);
+            Task.Run(async () => await Task.WhenAll(dbTask, updateTask));
             Thread.Sleep(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(10, 2), 5)));
 
             return result;
@@ -178,6 +180,33 @@ namespace Payments.Controllers
                     if (rand.NextDouble() < 0.001)
                     {
                         throw new OutOfMemoryException();
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogException(e, null);
+                }
+            }
+        }
+
+        private async Task SavePaymentAsync(ISpanContext context)
+        {
+            using (var scope = tracer.BuildSpan("SavePaymentAsync")
+                    .AddReference(References.FollowsFrom, context)
+                    .WithTag(Tags.SpanKind, Tags.SpanKindClient)
+                    .WithTag(Tags.Component, "java-jdbc")
+                    .WithTag(Tags.DbInstance, "payments-db")
+                    .WithTag(Tags.DbType, "mysql")
+                    .WithTag("peer.address", "payments.wavefront.com:3301")
+                    .WithTag("peer.service", "payments-db[mysql(payments.wavefront.com:3301)]")
+                    .StartActive())
+            {
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMilliseconds(Math.Max(RandomGauss(100, 25), 50)));
+                    if (rand.NextDouble() < 0.05)
+                    {
+                        throw new TimeoutException();
                     }
                 }
                 catch (Exception e)
