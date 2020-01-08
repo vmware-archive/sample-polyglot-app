@@ -196,9 +196,9 @@ namespace Payments.Controllers
                     .WithTag(Tags.SpanKind, Tags.SpanKindClient)
                     .WithTag(Tags.Component, "java-jdbc")
                     .WithTag(Tags.DbInstance, "payments-db")
-                    .WithTag(Tags.DbType, "sqlserver")
+                    .WithTag(Tags.DbType, "mysql")
                     .WithTag("peer.address", "payments.wavefront.com:3301")
-                    .WithTag("peer.service", "payments-db[sqlserver(payments.wavefront.com:3301)]")
+                    .WithTag("peer.service", "payments-db[mysql(payments.wavefront.com:3301)]")
                     .StartActive())
             {
                 try
