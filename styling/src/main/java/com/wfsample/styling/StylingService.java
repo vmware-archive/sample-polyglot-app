@@ -16,6 +16,7 @@ import com.wfsample.beachshirts.WrappingType;
 import com.wfsample.common.BeachShirtsUtils;
 import com.wfsample.common.DropwizardServiceConfig;
 import com.wfsample.common.dto.PackedShirtsDTO;
+import com.wfsample.common.dto.ShirtDTO;
 import com.wfsample.common.dto.ShirtStyleDTO;
 import com.wfsample.service.InventoryApi;
 import com.wfsample.service.StylingApi;
@@ -161,7 +162,11 @@ public class StylingService extends Application<DropwizardServiceConfig> {
               shirts).build());
         }
         Thread.sleep(20);
-        return new PackedShirtsDTO(new ArrayList<>());
+        List<ShirtDTO> packedShirts = new ArrayList<>(quantity);
+        for (int i = 0; i < quantity; i++) {
+          packedShirts.add(new ShirtDTO(new ShirtStyleDTO(id, id + "Image")));
+        }
+        return new PackedShirtsDTO(packedShirts);
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
