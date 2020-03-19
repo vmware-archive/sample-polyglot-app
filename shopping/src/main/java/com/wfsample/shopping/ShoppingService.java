@@ -11,25 +11,19 @@ import com.wfsample.common.dto.PackedShirtsDTO;
 import com.wfsample.service.DeliveryApi;
 import com.wfsample.service.InventoryApi;
 import com.wfsample.service.PaymentsApi;
+import com.wfsample.service.ShoppingApi;
 import com.wfsample.service.StylingApi;
 
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import io.opentracing.Span;
+import io.opentracing.Tracer;
+import io.opentracing.tag.Tags;
 
 /**
  * Driver for Shopping service provides consumer facing APIs supporting activities like browsing
@@ -75,29 +69,29 @@ public class ShoppingService extends Application<DropwizardServiceConfig> {
         BeachShirtsUtils.createProxyClient(stylingUrl, StylingApi.class,
             factory.getWavefrontJaxrsClientFilter()),
         BeachShirtsUtils.createProxyClient(deliveryUrl, DeliveryApi.class,
-            factory.getWavefrontJaxrsClientFilter())));
+            factory.getWavefrontJaxrsClientFilter()), factory.getTracer()));
   }
 
-  @Path("/shop")
-  @Produces(MediaType.APPLICATION_JSON)
-  public class ShoppingWebResource {
+  public class ShoppingWebResource implements ShoppingApi {
     private final InventoryApi inventoryApi;
     private final PaymentsApi paymentsApi;
     private final StylingApi stylingApi;
     private final DeliveryApi deliveryApi;
+    private final Tracer tracer;
     private final AtomicInteger updateInventory = new AtomicInteger(0);
+    private final AtomicInteger removeFromMenu = new AtomicInteger(0);
 
     public ShoppingWebResource(InventoryApi inventoryApi, PaymentsApi paymentsApi,
-                               StylingApi stylingApi, DeliveryApi deliveryApi) {
+                               StylingApi stylingApi, DeliveryApi deliveryApi, Tracer tracer) {
       this.inventoryApi = inventoryApi;
       this.stylingApi = stylingApi;
       this.deliveryApi = deliveryApi;
       this.paymentsApi = paymentsApi;
+      this.tracer = tracer;
     }
 
-    @GET
-    @Path("/menu")
-    public Response getShoppingMenu(@Context HttpHeaders httpHeaders) {
+    @Override
+    public Response getShoppingMenu() {
       try {
         Thread.sleep(20);
       } catch (InterruptedException e) {
@@ -106,10 +100,8 @@ public class ShoppingService extends Application<DropwizardServiceConfig> {
       return Response.ok(stylingApi.getAllStyles()).build();
     }
 
-    @POST
-    @Path("/order")
-    @Consumes(APPLICATION_JSON)
-    public Response orderShirts(OrderDTO orderDTO, @Context HttpHeaders httpHeaders) {
+    @Override
+    public Response orderShirts(OrderDTO orderDTO) {
       try {
         Thread.sleep(30);
       } catch (InterruptedException e) {
@@ -134,8 +126,7 @@ public class ShoppingService extends Application<DropwizardServiceConfig> {
           deliveryStatus.getStatus())).build();
     }
 
-    @GET
-    @Path("/status/{orderNum}")
+    @Override
     public Response getOrderStatus() {
       try {
         Thread.sleep(30);
@@ -145,9 +136,7 @@ public class ShoppingService extends Application<DropwizardServiceConfig> {
       return deliveryApi.trackOrder("42");
     }
 
-    @POST
-    @Path("/cancel")
-    @Consumes(APPLICATION_JSON)
+    @Override
     public Response cancelShirtsOrder() {
       try {
         Thread.sleep(50);
@@ -157,9 +146,7 @@ public class ShoppingService extends Application<DropwizardServiceConfig> {
       return deliveryApi.cancelOrder("42");
     }
 
-    @POST
-    @Path("/inventory/update")
-    @Consumes(APPLICATION_JSON)
+    @Override
     public Response updateInventory() {
       try {
         Thread.sleep(40);
@@ -171,6 +158,22 @@ public class ShoppingService extends Application<DropwizardServiceConfig> {
       } else {
         return stylingApi.restockStyle("42");
       }
+    }
+
+    @Override
+    public Response removeFromMenu(String id) {
+      try {
+        Thread.sleep(40);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      if (removeFromMenu.incrementAndGet() % 11 == 0) {
+        Span span = tracer.activeSpan();
+        if (span != null) {
+          Tags.ERROR.set(span, true);
+        }
+      }
+      return Response.ok().build();
     }
   }
 }

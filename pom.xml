@@ -20,6 +20,7 @@
         <module>delivery</module>
         <module>notification</module>
         <module>common</module>
+        <module>loadgen</module>
     </modules>
 
     <properties>
