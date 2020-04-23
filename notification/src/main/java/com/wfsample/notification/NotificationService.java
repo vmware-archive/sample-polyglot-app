@@ -3,6 +3,7 @@ package com.wfsample.notification;
 import com.google.common.collect.ImmutableMap;
 import com.wfsample.service.NotificationApi;
 import io.opentracing.Scope;
+import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.opentracing.contrib.concurrent.TracedExecutorService;
 import io.opentracing.log.Fields;
@@ -37,9 +38,10 @@ public class NotificationService implements NotificationApi {
   }
 
   public Response notify(String trackNum) {
-    try (Scope awsClientSnsSpan = tracer.buildSpan("notifySNS").
+    Span awsClientSnsSpan = tracer.buildSpan("notifySNS").
             withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT).withTag(Tags.COMPONENT.getKey(), "java-aws-sdk").
-            withTag(Tags.PEER_SERVICE.getKey(), "AmazonSNS").startActive(true)) {
+            withTag(Tags.PEER_SERVICE.getKey(), "AmazonSNS").start();
+    try (Scope awsClientSnsScope = tracer.activateSpan(awsClientSnsSpan)) {
       try {
         Thread.sleep(50);
         if (counter.incrementAndGet() % 500 == 0) {
@@ -48,13 +50,15 @@ public class NotificationService implements NotificationApi {
       } catch (InterruptedException e) {
         e.printStackTrace();
       } catch (Exception e) {
-        Tags.ERROR.set(awsClientSnsSpan.span(), true);
-        awsClientSnsSpan.span().log(ImmutableMap.of(
+        Tags.ERROR.set(awsClientSnsSpan, true);
+        awsClientSnsSpan.log(ImmutableMap.of(
                 Fields.EVENT, "error",
                 Fields.ERROR_KIND, e.getClass().getName(),
                 Fields.STACK, ExceptionUtils.getStackTrace(e)
         ));
       }
+    } finally {
+      awsClientSnsSpan.finish();
     }
     notificationExecutor.submit(new InternalNotifyService());
     try {
@@ -68,8 +72,8 @@ public class NotificationService implements NotificationApi {
   class InternalNotifyService implements Runnable {
     @Override
     public void run() {
-      try (Scope asyncSpan = tracer.buildSpan("asyncNotify").
-          startActive(true)) {
+      Span asyncSpan = tracer.buildSpan("asyncNotify").start();
+      try (Scope asyncScope = tracer.activateSpan(asyncSpan)) {
         try {
           Thread.sleep(200);
           if (counter.incrementAndGet() % 100 == 0) {
@@ -78,13 +82,15 @@ public class NotificationService implements NotificationApi {
         } catch (InterruptedException e) {
           e.printStackTrace();
         } catch (Exception e) {
-          Tags.ERROR.set(asyncSpan.span(), true);
-          asyncSpan.span().log(ImmutableMap.of(
+          Tags.ERROR.set(asyncSpan, true);
+          asyncSpan.log(ImmutableMap.of(
               Fields.EVENT, "error",
               Fields.ERROR_KIND, e.getClass().getName(),
               Fields.STACK, ExceptionUtils.getStackTrace(e)
           ));
         }
+      } finally {
+        asyncSpan.finish();
       }
     }
   }
