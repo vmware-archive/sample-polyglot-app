@@ -34,6 +34,7 @@ import io.dropwizard.setup.Environment;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.opentracing.Scope;
+import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.opentracing.tag.Tags;
 
@@ -138,21 +139,24 @@ public class StylingService extends Application<DropwizardServiceConfig> {
     @Override
     public PackedShirtsDTO makeShirts(String id, int quantity) {
       // create the record in database.
-      try (Scope jdbcSpan = tracer.buildSpan("createRecord").
-          withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT).
-          withTag(Tags.COMPONENT.getKey(), "java-jdbc").
-          withTag(Tags.DB_INSTANCE.getKey(), "stylingDB").
-          withTag(Tags.DB_TYPE.getKey(), "postgresql").
-          startActive(true)) {
+      Span jdbcSpan = tracer.buildSpan("createRecord").
+              withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT).
+              withTag(Tags.COMPONENT.getKey(), "java-jdbc").
+              withTag(Tags.DB_INSTANCE.getKey(), "stylingDB").
+              withTag(Tags.DB_TYPE.getKey(), "postgresql").
+              start();
+      try (Scope jdbcScope = tracer.activateSpan(jdbcSpan)) {
         try {
           Thread.sleep(20);
           if (counter.incrementAndGet() % 110 == 0) {
             throw new RuntimeException();
           }
         } catch (Exception e) {
-          Tags.ERROR.set(jdbcSpan.span(), true);
+          Tags.ERROR.set(jdbcSpan, true);
           throw new RuntimeException(e);
         }
+      } finally {
+        jdbcSpan.finish();
       }
       try {
         Response checkoutResponse = inventoryApi.checkout(id);
