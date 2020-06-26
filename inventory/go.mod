@@ -3,7 +3,6 @@ module wavefront.com/polyglot/inventory
 go 1.14
 
 require (
-	github.com/caio/go-tdigest v2.3.0+incompatible // indirect
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/go-chi/chi v4.0.1+incompatible
 	github.com/gogo/protobuf v1.2.0 // indirect
@@ -16,7 +15,7 @@ require (
 	github.com/uber/jaeger-client-go v2.15.0+incompatible
 	github.com/uber/jaeger-lib v1.5.0
 	github.com/wavefronthq/go-metrics-wavefront v0.9.1-0.20190523005342-a8ea12bf9968 // indirect
-	github.com/wavefronthq/wavefront-opentracing-sdk-go v0.0.0-20200318212200-cf717bbe7b33
-	github.com/wavefronthq/wavefront-sdk-go v0.9.5
+	github.com/wavefronthq/wavefront-opentracing-sdk-go v0.0.0-20200619230342-2e6fecdba17c
+	github.com/wavefronthq/wavefront-sdk-go v0.9.7
 	golang.org/x/net v0.0.0-20190125091013-d26f9f9a57f3 // indirect
 )
